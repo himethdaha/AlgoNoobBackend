@@ -13,20 +13,51 @@ async function userAuthenticationHandler(body) {
     const publicKey = fs.readFileSync("public.key");
     const err = {
       status: 400,
-      message: "User could not be found",
+      message: "Incorrect username or password",
+    };
+    // Throw error for not being able to save the user to the database
+    const resetPasswordRetryCountSaveError = {
+      status: 500,
+      message: "Unable to save the user",
     };
 
     // If no user is found in the database
     if (user.length === 0) {
-      console.log("user.length", user.length);
       throw err;
     } else {
+      // Get the user passwordRetryCount
+      let userPasswordRetryCount = user[0].passwordRetryCount;
+      // Get the time remaining for the user to retry the password
+      const timeRemaining = Math.floor(
+        (user[0].passwordRetryCountExpiration - Date.now()) / (1000 * 60)
+      );
+
+      // First check for the userPasswordRetryCount and the time limit expiration
+      if (userPasswordRetryCount === 3 && timeRemaining > 0) {
+        const passwordRetryErr = {
+          status: 429,
+          message: `Please try again in ${timeRemaining}`,
+        };
+        throw passwordRetryErr;
+      }
       // Validate the password
       const hashedPass = user[0].password;
       const userPass = body["login-password"];
       const match = await bcrypt.compare(userPass, hashedPass);
 
+      // If the password matches the username
       if (match) {
+        // Reset the passwordRetryCount if it's greater than zero
+        if (userPasswordRetryCount > 0) {
+          userPasswordRetryCount = 0;
+          // Save the passwordRetryCount in to the database
+          const resetPasswordRetryCount = await user[0].save(
+            (user[0].passwordRetryCount = userPasswordRetryCount)
+          );
+          if (!resetPasswordRetryCount) {
+            throw resetPasswordRetryCountSaveError;
+          }
+        }
         // Generate JWT
         const token = jwt.sign({ id: user[0]._id }, privateKey, {
           algorithm: "RS256",
@@ -41,13 +72,31 @@ async function userAuthenticationHandler(body) {
           };
           throw err;
         }
-      } else {
+      }
+      // If password does not match the username
+      else {
+        // If the user password expiration time has passed and userPasswordRetryCount is at 3
+        if (userPasswordRetryCount === 3 && timeRemaining <= 0) {
+          userPasswordRetryCount = 0;
+        }
+        // Increase passwordRetryCount by 1
+        userPasswordRetryCount += 1;
+
+        // If the passwordRetryCount happens for the first time, specify the time it happend
+        if (userPasswordRetryCount === 1) {
+          user[0].passwordRetryCountExpiration = Date.now() + 1000 * 60 * 10;
+        }
+        user[0].passwordRetryCount = userPasswordRetryCount;
+
+        const savePasswordRetryCount = await user[0].save();
+        if (!savePasswordRetryCount) {
+          throw resetPasswordRetryCountSaveError;
+        }
+        // Throw the error for invalid password
         throw err;
       }
     }
   } catch (error) {
-    console.log("error");
-    console.log(error);
     if (error) {
       throw error;
     } else {

@@ -53,7 +53,16 @@ const userSchema = new mongoose.Schema(
         },
       ],
     },
+    // Password retry count for logins
+    passwordRetryCount: {
+      type: Number,
+      default: 0,
+    },
+    passwordRetryCountExpiration: {
+      type: Date,
+    },
   },
+
   // Include virtual properties in the JSON representation
   { toJSON: { virtuals: true } }
 );
@@ -90,27 +99,32 @@ userSchema.pre("save", function (next) {
 
 // To hash the password
 userSchema.pre("save", function (next) {
-  // Get salt rounds
   const user = this;
-  const saltRounds = Number(process.env.SALT_ROUNDS);
+  // If password isn't changed, skip hashing
+  if (!user.isModified("password")) {
+    return next();
+  } else {
+    // Get salt rounds
+    const saltRounds = Number(process.env.SALT_ROUNDS);
 
-  // Auto-gen salt and hash
-  bcrypt.genSalt(saltRounds, function (err, salt) {
-    if (err) {
-      return next(new Error(`Could not generate salt. ${err}`));
-    } else {
-      bcrypt.hash(user.password, salt, function (err, hash) {
-        if (err) {
-          return next(
-            new Error(`Could not generate hash for password. ${err}`)
-          );
-        } else {
-          user.password = hash;
-          next();
-        }
-      });
-    }
-  });
+    // Auto-gen salt and hash
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) {
+        return next(new Error(`Could not generate salt. ${err}`));
+      } else {
+        bcrypt.hash(user.password, salt, function (err, hash) {
+          if (err) {
+            return next(
+              new Error(`Could not generate hash for password. ${err}`)
+            );
+          } else {
+            user.password = hash;
+            next();
+          }
+        });
+      }
+    });
+  }
 });
 
 const User = mongoose.model("User", userSchema);
