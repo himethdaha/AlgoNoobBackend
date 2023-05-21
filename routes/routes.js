@@ -1,6 +1,7 @@
 const bodyParser = require("body-parser");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
+const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
 
 const routes = {
   "/": function (req, res) {
@@ -12,31 +13,16 @@ const routes = {
       // get the body from request
       bodyParser.json()(req, res, () => {
         body = req.body;
-        console.log("This is the body of the request " + JSON.stringify(body));
-        const user = new User({
-          emailAddress: body.email,
-          userName: body.username,
-          password: body.password,
-          passwordConfirm: body.passwordConfirm,
-        });
 
-        user
-          .save()
-          .then((doc) => {
-            userSaved = doc;
+        // Call signup event handler
+        userSignUpHandler(body)
+          .then((response) => {
             res.status = 200;
-            const dataSent = { userName: doc.userName };
-            res.end(JSON.stringify(dataSent));
+            res.end(JSON.stringify(response));
           })
-          .catch((err) => {
-            if (
-              err.code === 11000 &&
-              (err.keyPattern.username === 1 ||
-                err.keyPattern.emailAddress === 1)
-            ) {
-              res.status = 400;
-              res.end(JSON.stringify("User already exists. Please try again."));
-            }
+          .catch((error) => {
+            res.status = error.status;
+            res.end(JSON.stringify(error.message));
           });
       });
     }
@@ -48,7 +34,8 @@ const routes = {
       //Parse user request
       bodyParser.json()(req, res, () => {
         body = req.body;
-        console.log("parsed body: ", body);
+
+        // Call login event handler
         userAuthenticationHandler(body)
           .then((response) => {
             console.log("response: ", response);

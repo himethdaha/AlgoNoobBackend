@@ -20,6 +20,7 @@
 .env.production.local
 .vscode
 *.md
+*.key
 
 npm-debug.log*
 yarn-debug.log*
