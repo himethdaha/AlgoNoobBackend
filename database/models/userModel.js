@@ -1,7 +1,7 @@
 // Imports
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const isEmail = require("validator/lib/isEmail");
+const validatorLib = require("validator");
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,7 +11,15 @@ const userSchema = new mongoose.Schema(
       required: [true, "Email address is required"],
       trim: true,
       unique: true,
-      validate: [isEmail, "Email is invalid"],
+      validate: [
+        {
+          validator: function (value) {
+            const escapedEmail = validatorLib.escape(value);
+            return validatorLib.isEmail(escapedEmail);
+          },
+          message: "Email is invalid",
+        },
+      ],
     },
     // Username
     userName: {
@@ -19,21 +27,31 @@ const userSchema = new mongoose.Schema(
       required: [true, "Username address is required"],
       unique: true,
       maxLength: [10, "Username can't be longer than 10 characters"],
+      validate: [
+        {
+          validator: function (value) {
+            return validatorLib.escape(value);
+          },
+          message: "Username is invalid",
+        },
+      ],
     },
     // Password
     password: {
       type: String,
       required: [true, "Password is required"],
       minLength: [6, "Password must be at least 6 characters"],
-      validate: {
-        validator: function (value) {
-          return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*[!@#$%^&*()\-=+{};:,<.>|[\]/?]).{6,}$/gm.test(
-            value
-          );
+      validate: [
+        {
+          validator: function (value) {
+            return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*[!@#$%^&*()\-=+{};:,<.>|[\]/?]).{6,}$/gm.test(
+              value
+            );
+          },
+          message:
+            "Password must contain at least one lowercase letter, one uppercase letter, one number, one special character and at least 6 characters",
         },
-        message:
-          "Password must contain at least one lowercase letter, one uppercase letter, one number, one special character and at least 6 characters",
-      },
+      ],
     },
   },
   // Include virtual properties in the JSON representation
@@ -75,23 +93,19 @@ userSchema.pre("save", function (next) {
   // Get salt rounds
   const user = this;
   const saltRounds = Number(process.env.SALT_ROUNDS);
-  console.log(typeof saltRounds);
-  const plainText = process.env.HASH_PLAIN_TEXT;
 
   // Auto-gen salt and hash
   bcrypt.genSalt(saltRounds, function (err, salt) {
     if (err) {
       return next(new Error(`Could not generate salt. ${err}`));
     } else {
-      bcrypt.hash(plainText, salt, function (err, hash) {
+      bcrypt.hash(user.password, salt, function (err, hash) {
         if (err) {
           return next(
             new Error(`Could not generate hash for password. ${err}`)
           );
         } else {
-          console.log("password before generated", user.password);
           user.password = hash;
-          console.log("password generated", user.password);
           next();
         }
       });

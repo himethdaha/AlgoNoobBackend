@@ -26,6 +26,17 @@ const server = http.createServer((req, res) => {
   const path = req.url;
   const errorMsg = { message: "404 Not Found" };
 
+  // Set CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Content-Type", "application/json");
+
+  if (req.method == "OPTIONS") {
+    res.writeHead(200);
+    res.end();
+  }
+
   // Check if the url exists
   if (routes[path]) {
     console.log("inside route: " + path);
