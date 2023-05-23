@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../database/models/userModel");
@@ -25,18 +24,30 @@ async function userAuthenticationHandler(body) {
     if (user.length === 0) {
       throw err;
     } else {
+      // Variables
       // Get the user passwordRetryCount
       let userPasswordRetryCount = user[0].passwordRetryCount;
+      // Get the max user passwordRetryCount
+      let maxUserPasswordRetryCount = user[0].maxPasswordRetryCount;
       // Get the time remaining for the user to retry the password
       const timeRemaining = Math.floor(
         (user[0].passwordRetryCountExpiration - Date.now()) / (1000 * 60)
       );
 
+      // Check if max passwordRetryCount is reached
+      if (maxUserPasswordRetryCount === 6) {
+        const usermaxPasswordRetryCountReached = {
+          status: 403,
+          message: "User login attempt exceeded maximum",
+          userName: user[0].userName,
+        };
+        throw usermaxPasswordRetryCountReached;
+      }
       // First check for the userPasswordRetryCount and the time limit expiration
       if (userPasswordRetryCount === 3 && timeRemaining > 0) {
         const passwordRetryErr = {
           status: 429,
-          message: `Please try again in ${timeRemaining}`,
+          message: `Please try again in ${timeRemaining} minutes`,
         };
         throw passwordRetryErr;
       }
@@ -64,7 +75,7 @@ async function userAuthenticationHandler(body) {
           expiresIn: process.env.JWT_EXPIRES_IN,
         });
         if (token) {
-          return { jwtoken: token, userName: user[0].userName };
+          return { jwtoken: token, userName: user[0].userName, status: 200 };
         } else {
           const err = {
             status: 500,
@@ -81,12 +92,15 @@ async function userAuthenticationHandler(body) {
         }
         // Increase passwordRetryCount by 1
         userPasswordRetryCount += 1;
+        // Increase maxUserPasswordRetryCount
+        maxUserPasswordRetryCount += 1;
 
         // If the passwordRetryCount happens for the first time, specify the time it happend
         if (userPasswordRetryCount === 1) {
           user[0].passwordRetryCountExpiration = Date.now() + 1000 * 60 * 10;
         }
         user[0].passwordRetryCount = userPasswordRetryCount;
+        user[0].maxPasswordRetryCount = maxUserPasswordRetryCount;
 
         const savePasswordRetryCount = await user[0].save();
         if (!savePasswordRetryCount) {

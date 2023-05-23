@@ -2,6 +2,7 @@ const bodyParser = require("body-parser");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
 const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
+const userForgotPassword = require("../eventHandlers/userForgotPassword");
 
 const routes = {
   "/": function (req, res) {
@@ -22,7 +23,7 @@ const routes = {
           })
           .catch((error) => {
             res.status = error.status;
-            res.end(JSON.stringify(error.message));
+            res.end(JSON.stringify(error));
           });
       });
     }
@@ -43,13 +44,29 @@ const routes = {
             res.end(JSON.stringify(response));
           })
           .catch((err) => {
-            if (err.status >= 400 && err.status < 500) {
-              res.status = err.status;
-              res.end(JSON.stringify(err.message));
-            } else {
-              res.status = err.status;
-              res.end(JSON.stringify(err.message));
-            }
+            res.status = err.status;
+            res.end(JSON.stringify(err));
+          });
+      });
+    }
+  },
+  "/forgot_password": function (req, res) {
+    if (req.method === "POST") {
+      let body;
+
+      bodyParser.json()(req, res, () => {
+        body = req.body;
+        console.log(body);
+        // Call the forgot password event handler
+        userForgotPassword(body)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((err) => {
+            console.log("err");
+            console.log(err);
+            res.status = err.status;
+            res.end(JSON.stringify(err));
           });
       });
     }

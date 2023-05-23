@@ -61,6 +61,11 @@ const userSchema = new mongoose.Schema(
     passwordRetryCountExpiration: {
       type: Date,
     },
+    // To block the user from loggin in further
+    maxPasswordRetryCount: {
+      type: Number,
+      default: 0,
+    },
   },
 
   // Include virtual properties in the JSON representation

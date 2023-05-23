@@ -25,7 +25,7 @@ async function userSignUpHandler(body) {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
     if (token) {
-      return { jwtoken: token, userName: savedUser.userName };
+      return { jwtoken: token, userName: savedUser.userName, status: 200 };
     } else {
       const err = {
         status: 500,
