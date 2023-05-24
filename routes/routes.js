@@ -60,7 +60,9 @@ const routes = {
         // Call the forgot password event handler
         userForgotPassword(body)
           .then((response) => {
-            console.log(response);
+            console.log("response", response);
+            res.status = 200;
+            res.end(JSON.stringify(response));
           })
           .catch((err) => {
             console.log("err");

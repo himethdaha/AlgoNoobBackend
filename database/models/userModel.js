@@ -1,6 +1,7 @@
 // Imports
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const validatorLib = require("validator");
 
 const userSchema = new mongoose.Schema(
@@ -66,6 +67,14 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Password reset token
+    passwordResetToken: {
+      type: String,
+    },
+    // Password reset token expiration time
+    passwordResetTokenExpirationTime: {
+      type: Date,
+    },
   },
 
   // Include virtual properties in the JSON representation
@@ -89,7 +98,7 @@ userSchema
 // Pre-hook
 // To validate password confirmation
 userSchema.pre("save", function (next) {
-  if (!this.isModified("password") && !this.isNew) {
+  if (!this.isModified("password")) {
     return next();
   }
   if (this.passwordConfirm === null) {
@@ -132,5 +141,33 @@ userSchema.pre("save", function (next) {
   }
 });
 
+// Methods
+userSchema.methods.createResetPasswordToken = async function () {
+  const user = this;
+  console.log("user schema", user);
+
+  // Create a 32 random byte
+  const randomBytes = crypto.randomBytes(32).toString("hex");
+  const saltRounds = Number(process.env.SALT_ROUNDS);
+
+  try {
+    // Generate salt and hash
+    const saltGenerated = await bcrypt.genSalt(saltRounds);
+    const resetToken = await bcrypt.hash(randomBytes, saltGenerated);
+
+    //save the hashed token to the database as a temporary password
+    user.passwordResetToken = resetToken;
+    user.passwordResetTokenExpirationTime = Date.now() + 10 * 60 * 1000;
+    await user.save();
+    // return the 32 random byte to be used by the user
+    return randomBytes;
+  } catch (error) {
+    const err = {
+      status: 500,
+      message: `Error when creating reset password token. ${error}`,
+    };
+    throw err;
+  }
+};
 const User = mongoose.model("User", userSchema);
 module.exports = User;

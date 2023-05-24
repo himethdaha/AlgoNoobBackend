@@ -7,11 +7,16 @@ async function userForgotPassword(body) {
     message: "Incorrect Email Address",
   };
   // Find the user via email provided
-  const userFound = await User.findOne({ email: body["passwordResetEmail"] });
-  console.log(userFound);
-  if (!userFound) {
+  const user = await User.findOne({ emailAddress: body["passwordResetEmail"] });
+  console.log(user);
+  if (!user) {
     throw err;
   } else {
+    const resetToken = await user.createResetPasswordToken();
+    console.log("resetToken", resetToken);
+    await user.save();
+
+    return { resetToken: resetToken, status: 200 };
   }
 }
 module.exports = userForgotPassword;
