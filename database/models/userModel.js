@@ -101,11 +101,20 @@ userSchema.pre("save", function (next) {
   if (!this.isModified("password")) {
     return next();
   }
+
   if (this.passwordConfirm === null) {
-    return next(new Error("Confirm Password is required"));
+    const error = {
+      status: 400,
+      message: "Confirm Password is required",
+    };
+    return next(error);
   }
   if (this.password !== this.passwordConfirm) {
-    return next(new Error("Confirm Password is invalid"));
+    const error = {
+      status: 400,
+      message: "Confirm Password is invalid",
+    };
+    return next(error);
   }
 
   next();
@@ -148,12 +157,13 @@ userSchema.methods.createResetPasswordToken = async function () {
 
   // Create a 32 random byte
   const randomBytes = crypto.randomBytes(32).toString("hex");
-  const saltRounds = Number(process.env.SALT_ROUNDS);
 
   try {
-    // Generate salt and hash
-    const saltGenerated = await bcrypt.genSalt(saltRounds);
-    const resetToken = await bcrypt.hash(randomBytes, saltGenerated);
+    // Generate the hashed token
+    const resetToken = crypto
+      .createHash("sha256")
+      .update(randomBytes)
+      .digest("hex");
 
     //save the hashed token to the database as a temporary password
     user.passwordResetToken = resetToken;

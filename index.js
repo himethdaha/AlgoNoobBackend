@@ -1,6 +1,6 @@
 // Imports
 const http = require("http");
-const bodyParser = require("body-parser");
+const url = require("url");
 const dotenv = require("dotenv");
 dotenv.config({ path: "./env" });
 
@@ -22,13 +22,20 @@ const connectDB = require("./database/databaseConn");
 // Server
 const server = http.createServer((req, res) => {
   // Variables
-  let body;
   const path = req.url;
+  console.log(path);
+  console.log(req.method);
+  // console.log("parsed", url.parse(req.url, true));
+  const parsed = url.parse(req.url, true);
+
   const errorMsg = { message: "404 Not Found" };
 
   // Set CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH"
+  );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Content-Type", "application/json");
 
@@ -42,7 +49,13 @@ const server = http.createServer((req, res) => {
     console.log("inside route: " + path);
     // Call the function for the specified path
     routes[path](req, res);
-  } else {
+  }
+  // else if (parsed.pathname.includes("reset_password")) {
+  //   console.log("inside token: " + path);
+  //   // Call reset_password
+  //   routes["/reset_password"](req, res);
+  // }
+  else {
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify(errorMsg));
   }

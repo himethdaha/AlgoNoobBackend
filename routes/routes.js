@@ -1,8 +1,10 @@
 const bodyParser = require("body-parser");
+const urlParser = require("url");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
 const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
 const userForgotPassword = require("../eventHandlers/userForgotPassword");
+const userResetPassword = require("../eventHandlers/userResetPassword");
 
 const routes = {
   "/": function (req, res) {
@@ -55,10 +57,11 @@ const routes = {
       let body;
 
       bodyParser.json()(req, res, () => {
+        console.log("bodyParser req", req.headers.origin);
         body = req.body;
         console.log(body);
         // Call the forgot password event handler
-        userForgotPassword(body)
+        userForgotPassword(body, req)
           .then((response) => {
             console.log("response", response);
             res.status = 200;
@@ -67,6 +70,25 @@ const routes = {
           .catch((err) => {
             console.log("err");
             console.log(err);
+            res.status = err.status;
+            res.end(JSON.stringify(err));
+          });
+      });
+    }
+  },
+  "/reset_password": function (req, res) {
+    if (req.method === "PATCH") {
+      console.log("req", req.url);
+      let body;
+      bodyParser.json()(req, res, () => {
+        body = req.body;
+
+        userResetPassword(body)
+          .then((response) => {
+            res.status = 200;
+            res.end(JSON.stringify(response));
+          })
+          .catch((err) => {
             res.status = err.status;
             res.end(JSON.stringify(err));
           });
