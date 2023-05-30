@@ -1,15 +1,12 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const User = require("../database/models/userModel");
-const fs = require("fs");
+const generateJWT = require("../utils/generateJWT");
 
 async function userAuthenticationHandler(body) {
   // Check if the username is in the database
   try {
     // Variables
     const user = await User.find({ userName: body["login-username"] }).exec();
-    const privateKey = fs.readFileSync("private.key");
-    const publicKey = fs.readFileSync("public.key");
     const err = {
       status: 400,
       message: "Incorrect username or password",
@@ -69,17 +66,37 @@ async function userAuthenticationHandler(body) {
             throw resetPasswordRetryCountSaveError;
           }
         }
+
         // Generate JWT
-        const token = jwt.sign({ id: user[0]._id }, privateKey, {
-          algorithm: "RS256",
-          expiresIn: process.env.JWT_EXPIRES_IN,
-        });
-        if (token) {
-          return { jwtoken: token, userName: user[0].userName, status: 200 };
-        } else {
+        try {
+          const token = await new Promise((resolve, reject) => {
+            generateJWT(user[0]._id, function (error, token) {
+              if (error) {
+                const err = {
+                  status: 500,
+                  message: `Error Generating JWT. ${error}`,
+                };
+                return reject(err);
+              } else if (token) {
+                resolve(token);
+              } else {
+                const err = {
+                  status: 500,
+                  message: `No token available`,
+                };
+                return reject(err);
+              }
+            });
+          });
+          return {
+            jwtoken: token,
+            userName: user[0].userName,
+            status: 200,
+          };
+        } catch (error) {
           const err = {
             status: 500,
-            message: "Error Generating JWT",
+            message: `Error Generating JWT. ${error}`,
           };
           throw err;
         }

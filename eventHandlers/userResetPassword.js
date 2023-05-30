@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const User = require("../database/models/userModel");
+const generateJWT = require("../utils/generateJWT");
 
 async function userResetPassword(body) {
   try {
@@ -44,7 +45,40 @@ async function userResetPassword(body) {
           user.passwordResetToken = undefined;
           user.passwordResetTokenExpirationTime = undefined;
           await user.save();
-          return { status: 200, message: "Password Updated" };
+
+          // Send in a new JWT after the password has been updated
+          try {
+            const token = await new Promise((resolve, reject) => {
+              generateJWT(user._id, function (error, token) {
+                if (error) {
+                  const err = {
+                    status: 500,
+                    message: `Error Generating JWT. ${error}`,
+                  };
+                  return reject(err);
+                } else if (token) {
+                  resolve(token);
+                } else {
+                  const err = {
+                    status: 500,
+                    message: `Could not generate token`,
+                  };
+                  return reject(err);
+                }
+              });
+            });
+            return {
+              jwtoken: token,
+              status: 200,
+              message: "Password Updated",
+            };
+          } catch (error) {
+            const err = {
+              status: 500,
+              message: `Could not generate token. ${error}`,
+            };
+            throw err;
+          }
         }
       }
       // If no user with the token

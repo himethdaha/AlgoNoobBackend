@@ -1,12 +1,8 @@
 const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
-const fs = require("fs");
 const User = require("../database/models/userModel");
+const generateJWT = require("../utils/generateJWT");
 
 async function userSignUpHandler(body) {
-  // Variables
-  const privateKey = fs.readFileSync("private.key");
-
   // Create user object
   const user = new User({
     emailAddress: body.email,
@@ -20,19 +16,30 @@ async function userSignUpHandler(body) {
     const savedUser = await user.save();
 
     // Generate JWT
-    const token = jwt.sign({ id: savedUser._id }, privateKey, {
-      algorithm: "RS256",
-      expiresIn: process.env.JWT_EXPIRES_IN,
+    const token = await new Promise((resolve, reject) => {
+      generateJWT(savedUser._id, function (error, token) {
+        if (error) {
+          const err = {
+            status: 500,
+            message: `Error Generating JWT. ${error}`,
+          };
+          return reject(err);
+        } else if (token) {
+          resolve(token);
+        } else {
+          const err = {
+            status: 500,
+            message: `No token available`,
+          };
+          return reject(err);
+        }
+      });
     });
-    if (token) {
-      return { jwtoken: token, userName: savedUser.userName, status: 200 };
-    } else {
-      const err = {
-        status: 500,
-        message: "Error Generating JWT",
-      };
-      throw err;
-    }
+    return {
+      jwtoken: token,
+      userName: savedUser.userName,
+      status: 200,
+    };
   } catch (error) {
     // If a user already exists with the signing in users username or email
     if (
