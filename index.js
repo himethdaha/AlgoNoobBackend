@@ -25,20 +25,21 @@ const server = http.createServer((req, res) => {
   const path = req.url;
   console.log(path);
   console.log(req.method);
-  // console.log("parsed", url.parse(req.url, true));
-  const parsed = url.parse(req.url, true);
 
   const errorMsg = { message: "404 Not Found" };
 
   // Set CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // res.setHeader is used to set single header values for each response. They are not persistent across IPs or requests
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3001");
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, PATCH"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Content-Type", "application/json");
+  res.setHeader("Access-Control-Allow-Credentials", true);
 
+  // For pre-flight requests
   if (req.method == "OPTIONS") {
     res.writeHead(200);
     res.end();
@@ -49,13 +50,7 @@ const server = http.createServer((req, res) => {
     console.log("inside route: " + path);
     // Call the function for the specified path
     routes[path](req, res);
-  }
-  // else if (parsed.pathname.includes("reset_password")) {
-  //   console.log("inside token: " + path);
-  //   // Call reset_password
-  //   routes["/reset_password"](req, res);
-  // }
-  else {
+  } else {
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify(errorMsg));
   }

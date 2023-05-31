@@ -69,8 +69,9 @@ async function userAuthenticationHandler(body) {
 
         // Generate JWT
         try {
-          const token = await new Promise((resolve, reject) => {
-            generateJWT(user[0]._id, function (error, token) {
+          const { token, cookie } = await new Promise((resolve, reject) => {
+            console.log("inside1");
+            generateJWT(user[0]._id, function (error, { token, cookie }) {
               if (error) {
                 const err = {
                   status: 500,
@@ -78,7 +79,7 @@ async function userAuthenticationHandler(body) {
                 };
                 return reject(err);
               } else if (token) {
-                resolve(token);
+                resolve({ token, cookie });
               } else {
                 const err = {
                   status: 500,
@@ -90,6 +91,7 @@ async function userAuthenticationHandler(body) {
           });
           return {
             jwtoken: token,
+            cookieOptions: cookie,
             userName: user[0].userName,
             status: 200,
           };

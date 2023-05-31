@@ -33,17 +33,43 @@ const routes = {
   "/login": function (req, res) {
     if (req.method === "POST") {
       let body;
-
       //Parse user request
       bodyParser.json()(req, res, () => {
+        console.log("cred", req.credentials);
         body = req.body;
 
         // Call login event handler
         userAuthenticationHandler(body)
           .then((response) => {
-            console.log("response: ", response);
             res.status = 200;
-            res.end(JSON.stringify(response));
+            const { expires, secure, httpOnly } = response.cookieOptions;
+
+            const options = {
+              jwt: response.jwtoken,
+              Expires: expires,
+              Secure: secure,
+              HttpOnly: httpOnly,
+            };
+
+            const cookieOptions = Object.entries(options)
+              .map(([key, value]) => {
+                if (key === "Expires") {
+                  const date = value.toUTCString();
+                  return `${key}=${date}`;
+                } else {
+                  return `${key}=${value}`;
+                }
+              })
+              .join("; ");
+            console.log(response.jwtoken);
+            res.setHeader("Set-Cookie", cookieOptions);
+            res.end(
+              JSON.stringify({
+                userName: response.userName,
+                status: response.status,
+                token: response.jwtoken,
+              })
+            );
           })
           .catch((err) => {
             res.status = err.status;

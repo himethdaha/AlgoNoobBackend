@@ -24,13 +24,21 @@ const generateJWT = (userId, callback) => {
           },
           function (err, token) {
             if (err) {
+              console.log("err jsw", err);
               const error = {
                 status: 500,
                 message: `Error generating JWT. ${err}`,
               };
               return callback(error);
             } else {
-              return callback(null, token);
+              const cookie = {
+                expires: new Date(
+                  Date.now() + process.env.COOKIE_EXP * 60 * 1000
+                ),
+                secure: false,
+                httpOnly: true,
+              };
+              return callback(null, { token, cookie });
             }
           }
         );
