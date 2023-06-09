@@ -20,7 +20,7 @@ const connectDB = require("./database/databaseConn");
 })();
 
 // Server
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   // Variables
   const path = req.url;
   console.log(path);
@@ -44,6 +44,17 @@ const server = http.createServer((req, res) => {
     res.writeHead(200);
     res.end();
   }
+
+  // Rate limiter
+  // Check if the user is logged in
+  if (req.headers.cookie) {
+    console.log(req.headers.cookie);
+  }
+  // Get the user
+  // const user = await User.findOne({})
+  // Check if its the first request within the window
+  // If window has expired and tokens are greater than or equal to 0, replenish tokens
+  // If tokens are finshed before window expires, throw error
 
   // Check if the url exists
   if (routes[path]) {

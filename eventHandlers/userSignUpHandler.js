@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const User = require("../database/models/userModel");
 const generateJWT = require("../utils/generateJWT");
 

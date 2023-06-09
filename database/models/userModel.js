@@ -75,6 +75,34 @@ const userSchema = new mongoose.Schema(
     passwordResetTokenExpirationTime: {
       type: Date,
     },
+    dateOfBirth: {
+      type: Date,
+    },
+    proficiency: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
+    province: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    address: {
+      type: String,
+    },
+    // For rate limiting based on user
+    // Tokens for rate limiting
+    rateLimitTokens: {
+      type: Number,
+      default: 10,
+    },
+    // Timestamp for rate limiting
+    rateLimitTimeStamp: {
+      type: Date,
+    },
   },
 
   // Include virtual properties in the JSON representation

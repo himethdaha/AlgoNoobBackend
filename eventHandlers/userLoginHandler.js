@@ -35,7 +35,7 @@ async function userAuthenticationHandler(body) {
       if (maxUserPasswordRetryCount === 6) {
         const usermaxPasswordRetryCountReached = {
           status: 403,
-          message: "User login attempt exceeded maximum",
+          message: "User login attempt exceeded",
           userName: user[0].userName,
         };
         throw usermaxPasswordRetryCountReached;

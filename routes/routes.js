@@ -5,6 +5,7 @@ const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
 const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
 const userForgotPassword = require("../eventHandlers/userForgotPassword");
 const userResetPassword = require("../eventHandlers/userResetPassword");
+const userUpdate = require("../eventHandlers/userUpdate");
 
 const routes = {
   "/": function (req, res) {
@@ -115,6 +116,24 @@ const routes = {
             res.end(JSON.stringify(response));
           })
           .catch((err) => {
+            res.status = err.status;
+            res.end(JSON.stringify(err));
+          });
+      });
+    }
+  },
+  "/My_Account/Update": function (req, res) {
+    if (req.method === "PATCH") {
+      let body;
+      bodyParser.json()(req, res, () => {
+        body = req.body;
+
+        userUpdate(body)
+          .then((response) => {
+            res.end(JSON.stringify({ status: 200 }));
+          })
+          .catch((err) => {
+            console.log(err);
             res.status = err.status;
             res.end(JSON.stringify(err));
           });
