@@ -36,7 +36,7 @@ const server = http.createServer(async (req, res) => {
     "GET, POST, PUT, DELETE, PATCH"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Accept", "application/json, multipart/form-data");
   res.setHeader("Access-Control-Allow-Credentials", true);
 
   // For pre-flight requests

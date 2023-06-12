@@ -21,6 +21,7 @@
 .vscode
 *.md
 *.key
+/resources
 
 npm-debug.log*
 yarn-debug.log*

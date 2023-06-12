@@ -1,4 +1,5 @@
 const bodyParser = require("body-parser");
+const formidable = require("formidable");
 const urlParser = require("url");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
@@ -86,7 +87,6 @@ const routes = {
       bodyParser.json()(req, res, () => {
         console.log("bodyParser req", req.headers.origin);
         body = req.body;
-        console.log(body);
         // Call the forgot password event handler
         userForgotPassword(body, req)
           .then((response) => {
@@ -124,20 +124,16 @@ const routes = {
   },
   "/My_Account/Update": function (req, res) {
     if (req.method === "PATCH") {
-      let body;
-      bodyParser.json()(req, res, () => {
-        body = req.body;
-
-        userUpdate(body)
-          .then((response) => {
-            res.end(JSON.stringify({ status: 200 }));
-          })
-          .catch((err) => {
-            console.log(err);
-            res.status = err.status;
-            res.end(JSON.stringify(err));
-          });
-      });
+      userUpdate(req)
+        .then((response) => {
+          res.status = 200;
+          res.end(JSON.stringify(response));
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status = err.status;
+          res.end(JSON.stringify(err));
+        });
     }
   },
 };
