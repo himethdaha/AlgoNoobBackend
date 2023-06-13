@@ -116,7 +116,7 @@ async function userAuthenticationHandler(body) {
 
         // If the passwordRetryCount happens for the first time, specify the time it happend
         if (userPasswordRetryCount === 1) {
-          user[0].passwordRetryCountExpiration = Date.now() + 1000 * 60 * 10;
+          user[0].passwordRetryCountExpiration = Date.now() + 1000 * 60 * 11;
         }
         user[0].passwordRetryCount = userPasswordRetryCount;
         user[0].maxPasswordRetryCount = maxUserPasswordRetryCount;

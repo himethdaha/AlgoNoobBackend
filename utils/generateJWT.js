@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const privateKeyPath = "private.key";
 
 const generateJWT = (userId, callback) => {
-  console.log("inside");
   try {
     // Read the private key
     fs.readFile(privateKeyPath, function (err, privateKey) {

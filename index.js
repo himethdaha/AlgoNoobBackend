@@ -14,7 +14,8 @@ const connectDB = require("./database/databaseConn");
   try {
     await connectDB();
   } catch (error) {
-    console.log(`Error connecting with the database ${JSON.stringify(error)}`);
+    console.log(`Error connecting with the database`);
+    console.log(error);
     return error;
   }
 })();
@@ -26,6 +27,7 @@ const server = http.createServer(async (req, res) => {
   console.log(path);
   console.log(req.method);
 
+  console.log("all cookies", req.headers.cookie);
   const errorMsg = { message: "404 Not Found" };
 
   // Set CORS
@@ -44,17 +46,6 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200);
     res.end();
   }
-
-  // Rate limiter
-  // Check if the user is logged in
-  if (req.headers.cookie) {
-    console.log(req.headers.cookie);
-  }
-  // Get the user
-  // const user = await User.findOne({})
-  // Check if its the first request within the window
-  // If window has expired and tokens are greater than or equal to 0, replenish tokens
-  // If tokens are finshed before window expires, throw error
 
   // Check if the url exists
   if (routes[path]) {

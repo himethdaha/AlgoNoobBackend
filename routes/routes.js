@@ -1,6 +1,8 @@
+const fs = require("fs");
 const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const urlParser = require("url");
+const validateJWT = require("../utils/validateJWT");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
 const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
@@ -53,6 +55,7 @@ const routes = {
               HttpOnly: httpOnly,
             };
 
+            // Concatnate cookie options
             const cookieOptions = Object.entries(options)
               .map(([key, value]) => {
                 if (key === "Expires") {
@@ -63,7 +66,9 @@ const routes = {
                 }
               })
               .join("; ");
-            console.log(response.jwtoken);
+
+            console.log("cookieOptions: " + JSON.stringify(cookieOptions));
+            // Set cookie in response header
             res.setHeader("Set-Cookie", cookieOptions);
             res.end(
               JSON.stringify({
@@ -78,6 +83,18 @@ const routes = {
             res.end(JSON.stringify(err));
           });
       });
+    }
+  },
+  "/logout": function (req, res) {
+    if (req.method === "POST") {
+      console.log(req.headers.cookie);
+      // Set a cookie to expire
+      res.setHeader(
+        "Set-Cookie",
+        `jwt=; Max-Age=1; Secure=false; HttpOnly=true`
+      );
+      res.status = 200;
+      res.end(JSON.stringify({ message: "Logged out" }));
     }
   },
   "/forgot_password": function (req, res) {
@@ -122,18 +139,32 @@ const routes = {
       });
     }
   },
-  "/My_Account/Update": function (req, res) {
+  "/My_Account/Update": async function (req, res) {
     if (req.method === "PATCH") {
-      userUpdate(req)
-        .then((response) => {
-          res.status = 200;
-          res.end(JSON.stringify(response));
-        })
-        .catch((err) => {
-          console.log(err);
-          res.status = err.status;
-          res.end(JSON.stringify(err));
+      // First check if user authenticated
+      try {
+        const valdiated = await validateJWT(req, function (err, response) {
+          if (err) {
+            res.status = err.status;
+            res.end(JSON.stringify(err));
+          } else {
+            return response;
+          }
         });
+
+        userUpdate(req)
+          .then((response) => {
+            res.status = 200;
+            res.end(JSON.stringify(response));
+          })
+          .catch((err) => {
+            res.status = err.status;
+            res.end(JSON.stringify(err));
+          });
+      } catch (err) {
+        res.status = err.status;
+        res.end(JSON.stringify(err));
+      }
     }
   },
 };

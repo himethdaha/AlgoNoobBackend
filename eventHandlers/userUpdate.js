@@ -28,17 +28,12 @@ async function userUpdate(req) {
         allFields = JSON.parse(fields.jsonData);
 
         // Access files
-        if (files) {
+        if (Object.keys(files).length > 0) {
+          console.log("files", files);
           const file = files.profilepic;
 
-          // Get the image extension
-          const ext = file.originalFilename.substring(
-            file.originalFilename.lastIndexOf(".")
-          );
-
           // File path
-          const fullFileName = `${file.newFilename}${ext}`;
-          const filePath = `resources/images/users/${fullFileName}`;
+          const filePath = `resources/images/users/${file.originalFilename}`;
 
           // Files destination
           fs.rename(file.filepath, filePath, (err) => {
@@ -50,12 +45,12 @@ async function userUpdate(req) {
                 })
               );
             }
-            allFields.profilepic = fullFileName;
-            console.log("allFields", allFields);
+            allFields.profilepic = file.originalFilename;
           });
         }
 
         resolve(allFields);
+        console.log("allFields", allFields);
       });
     });
 
@@ -65,7 +60,7 @@ async function userUpdate(req) {
     const user = await User.find({
       userName: userUpdateFields.user,
     }).exec();
-    console.log(user);
+
     const err = {
       status: 400,
       message: "Can not find user 🥹",
@@ -82,7 +77,6 @@ async function userUpdate(req) {
           updateBody[key] = value;
         }
       }
-      console.log("updatedBody", updateBody);
       // Get the fields from the request and update them
       const updatedUser = await User.findOneAndUpdate(
         { userName: userUpdateFields.user },

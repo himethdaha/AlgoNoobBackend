@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema(
     },
     profilepic: {
       type: String,
-      default: "default.jpg",
+      default: "default.jpeg",
     },
     // For rate limiting based on user
     // Tokens for rate limiting
