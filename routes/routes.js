@@ -75,6 +75,7 @@ const routes = {
                 userName: response.userName,
                 status: response.status,
                 token: response.jwtoken,
+                image: response.image,
               })
             );
           })
@@ -143,7 +144,7 @@ const routes = {
     if (req.method === "PATCH") {
       // First check if user authenticated
       try {
-        const valdiated = await validateJWT(req, function (err, response) {
+        await validateJWT(req, function (err, response) {
           if (err) {
             res.status = err.status;
             res.end(JSON.stringify(err));

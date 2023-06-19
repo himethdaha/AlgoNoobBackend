@@ -1,3 +1,6 @@
+const fs = require("fs");
+const { promisify } = require("util");
+const readFileAsync = promisify(fs.readFile);
 const bcrypt = require("bcrypt");
 const User = require("../database/models/userModel");
 const generateJWT = require("../utils/generateJWT");
@@ -7,6 +10,7 @@ async function userAuthenticationHandler(body) {
   try {
     // Variables
     const user = await User.find({ userName: body["login-username"] }).exec();
+    let image;
     const err = {
       status: 400,
       message: "Incorrect username or password",
@@ -67,6 +71,21 @@ async function userAuthenticationHandler(body) {
           }
         }
 
+        // Read default or user image
+        try {
+          // Create a buffer
+          image = await readFileAsync(
+            "C:\\Users\\himet\\OneDrive\\Documents\\React\\my-first-nodejs-backend\\resources\\images\\users\\default.jpeg"
+          );
+        } catch (error) {
+          const err = {
+            status: 500,
+            message: `Can't read image: ${error}`,
+          };
+
+          throw err;
+        }
+
         // Generate JWT
         try {
           const { token, cookie } = await new Promise((resolve, reject) => {
@@ -94,6 +113,8 @@ async function userAuthenticationHandler(body) {
             cookieOptions: cookie,
             userName: user[0].userName,
             status: 200,
+            // image: imageString,
+            image: image,
           };
         } catch (error) {
           const err = {
