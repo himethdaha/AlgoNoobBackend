@@ -67,7 +67,6 @@ const routes = {
               })
               .join("; ");
 
-            console.log("cookieOptions: " + JSON.stringify(cookieOptions));
             // Set cookie in response header
             res.setHeader("Set-Cookie", cookieOptions);
             res.end(

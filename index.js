@@ -27,7 +27,6 @@ const server = http.createServer(async (req, res) => {
   console.log(path);
   console.log(req.method);
 
-  console.log("all cookies", req.headers.cookie);
   const errorMsg = { message: "404 Not Found" };
 
   // Set CORS
@@ -55,7 +54,6 @@ const server = http.createServer(async (req, res) => {
 
   // Check if the url exists
   if (routes[path]) {
-    console.log("inside route: " + path);
     // Call the function for the specified path
     routes[path](req, res);
   } else {
