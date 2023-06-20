@@ -12,19 +12,20 @@ const validateJWT = async (req, callback) => {
     // Also check if we have cookies in header
     if (req.headers.cookie) {
       // Get the jwt cookie
-      const jwtCookie = req.headers.cookie.split(";").map((cookie) => {
+      const jwtValue = req.headers.cookie.split(";").map((cookie) => {
         // Split the cookie into name and value pairs
         const [name, value] = cookie.trim().split("=");
 
         // Check if the name matches with the 'jwt' cookie name
         if (name === "jwt") {
-          const [jwtCookie] = value;
           return value;
         }
       });
+      const jwtCookie = jwtValue[1];
 
       // If no jwt cookie sent
       if (!jwtCookie) {
+        console.log("NO JWT cookie sent");
         const error = {
           status: 401,
           message: `Please login/signup to access`,
@@ -50,7 +51,6 @@ const validateJWT = async (req, callback) => {
               return callback(error);
             }
           } else {
-            console.log("nothing");
             return callback(null, true);
           }
         });
@@ -70,7 +70,7 @@ const validateJWT = async (req, callback) => {
       status: error.status || 500,
       message: error.message || `Error Validating JWT. ${error}`,
     };
-    throw error;
+    throw err;
   }
 };
 
