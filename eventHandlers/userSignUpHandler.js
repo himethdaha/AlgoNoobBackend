@@ -2,6 +2,8 @@ const fs = require("fs");
 const { promisify } = require("util");
 const readFileAsync = promisify(fs.readFile);
 const User = require("../database/models/userModel");
+const getProfilePic = require("../utils/getProfilePic");
+
 const generateJWT = require("../utils/generateJWT");
 
 async function userSignUpHandler(body) {
@@ -16,20 +18,9 @@ async function userSignUpHandler(body) {
   });
 
   try {
-    // Read default image
-    try {
-      // Create a buffer
-      image = await readFileAsync(
-        "C:\\Users\\himet\\OneDrive\\Documents\\React\\my-first-nodejs-backend\\resources\\images\\users\\default.jpeg"
-      );
-    } catch (error) {
-      const err = {
-        status: 500,
-        message: `Can't read image: ${error}`,
-      };
+    // Read default or user image
+    const image = await getProfilePic(user);
 
-      throw err;
-    }
     // Save user to database
     const savedUser = await user.save();
     console.log("saved user", savedUser);

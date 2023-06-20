@@ -1,8 +1,7 @@
 const fs = require("fs");
-const { promisify } = require("util");
-const readFileAsync = promisify(fs.readFile);
 const bcrypt = require("bcrypt");
 const User = require("../database/models/userModel");
+const getProfilePic = require("../utils/getProfilePic");
 const generateJWT = require("../utils/generateJWT");
 
 async function userAuthenticationHandler(body) {
@@ -72,19 +71,11 @@ async function userAuthenticationHandler(body) {
         }
 
         // Read default or user image
-        try {
-          // Create a buffer
-          image = await readFileAsync(
-            "C:\\Users\\himet\\OneDrive\\Documents\\React\\my-first-nodejs-backend\\resources\\images\\users\\default.jpeg"
-          );
-        } catch (error) {
-          const err = {
-            status: 500,
-            message: `Can't read image: ${error}`,
-          };
-
-          throw err;
-        }
+        const image = await getProfilePic(user);
+        console.log(
+          "🚀 ~ file: userLoginHandler.js:75 ~ userAuthenticationHandler ~ image:",
+          image
+        );
 
         // Generate JWT
         try {
@@ -113,7 +104,6 @@ async function userAuthenticationHandler(body) {
             cookieOptions: cookie,
             userName: user[0].userName,
             status: 200,
-            // image: imageString,
             image: image,
           };
         } catch (error) {

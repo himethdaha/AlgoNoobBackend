@@ -1,6 +1,7 @@
 const fs = require("fs");
 const formidable = require("formidable");
 const User = require("../database/models/userModel");
+const getProfilePic = require("../utils/getProfilePic");
 
 async function userUpdate(req) {
   try {
@@ -8,6 +9,10 @@ async function userUpdate(req) {
     let userUpdateFields;
     let updateBody = {};
     let allFields = {};
+    let image;
+    let updatedUserName;
+    let changeuserName = false;
+    let changeProfilePic = false;
 
     // Create instance of formidable to handle file data
     const form = new formidable.IncomingForm();
@@ -50,7 +55,6 @@ async function userUpdate(req) {
         }
 
         resolve(allFields);
-        console.log("allFields", allFields);
       });
     });
 
@@ -72,9 +76,16 @@ async function userUpdate(req) {
     } else {
       // Get the entries from the body to be updated
       for (const [key, value] of Object.entries(userUpdateFields)) {
-        console.log("userUpdateFields", userUpdateFields);
         if (key !== "user") {
           updateBody[key] = value;
+        }
+        if (key === "userName") {
+          console.log("🚀 ~ file: userUpdate.js:83 ~ userUpdate ~ name:", key);
+          changeuserName = true;
+        }
+        if (key === "profilepic") {
+          console.log("🚀 ~ file: userUpdate.js:87 ~ userUpdate ~ image:", key);
+          changeProfilePic = true;
         }
       }
       // Get the fields from the request and update them
@@ -88,7 +99,26 @@ async function userUpdate(req) {
       );
       if (updatedUser) {
         await updatedUser.save();
-        return { status: 200, message: "User Successfully updated" };
+        console.log("DONE UPDATING");
+
+        let returningObj = {
+          status: 200,
+          message: "User Successfully updated",
+        };
+
+        // Must send new profile pic and username if changed
+        if (changeProfilePic) {
+          console.log("chaning pfp");
+          // Get the default/new user profile picture
+          image = await getProfilePic(updatedUser);
+          returningObj.image = image;
+        }
+
+        if (changeuserName) {
+          returningObj.userName = updatedUser.userName;
+        }
+
+        return returningObj;
       } else {
         throw (err = {
           status: 500,
