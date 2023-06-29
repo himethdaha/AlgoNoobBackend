@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const User = require("../database/models/userModel");
-const generateJWT = require("../utils/generateJWT");
+const generateJWT = require("../utils/jwt/generateJWT");
 
 async function userResetPassword(body) {
   try {

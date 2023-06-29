@@ -2,7 +2,7 @@ const fs = require("fs");
 const bcrypt = require("bcrypt");
 const User = require("../database/models/userModel");
 const getProfilePic = require("../utils/getProfilePic");
-const generateJWT = require("../utils/generateJWT");
+const generateJWT = require("../utils/jwt/generateJWT");
 
 async function userAuthenticationHandler(body) {
   // Check if the username is in the database

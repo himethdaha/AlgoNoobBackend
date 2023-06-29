@@ -1,12 +1,10 @@
-const fs = require("fs");
-const { promisify } = require("util");
-const readFileAsync = promisify(fs.readFile);
 const User = require("../database/models/userModel");
 const getProfilePic = require("../utils/getProfilePic");
+const { verifySignUp } = require("../utils/email/emailSender");
 
-const generateJWT = require("../utils/generateJWT");
+const generateJWT = require("../utils/jwt/generateJWT");
 
-async function userSignUpHandler(body) {
+async function userSignUpHandler(body, req) {
   // Variables
   let image;
   // Create user object
@@ -25,33 +23,33 @@ async function userSignUpHandler(body) {
     const savedUser = await user.save();
     console.log("saved user", savedUser);
 
-    // Generate JWT
-    const token = await new Promise((resolve, reject) => {
-      generateJWT(savedUser._id, function (error, token) {
-        if (error) {
-          const err = {
-            status: 500,
-            message: `Error Generating JWT. ${error}`,
-          };
-          return reject(err);
-        } else if (token) {
-          resolve(token);
-        } else {
-          const err = {
-            status: 500,
-            message: `No token available`,
-          };
-          return reject(err);
-        }
-      });
-    });
+    // Create the token to be sent to the user
+    const verifierToken = await user.createResetPasswordToken("verifyMe");
 
-    return {
-      jwtoken: token,
-      userName: savedUser.userName,
-      status: 200,
-      image: image,
-    };
+    // Send email for verification
+    try {
+      await verifySignUp({
+        userEmail: savedUser.emailAddress,
+        userName: savedUser.userName,
+        subject: `User Verification`,
+        url: `${req.headers.origin + "/verifyme/" + verifierToken}`,
+        contact: `${req.headers.origin + "/contact/"}`,
+      });
+
+      return {
+        status: 200,
+        message:
+          "Verification email sent successfully. Please check your email",
+      };
+    } catch (error) {
+      // Delete user from database if an error occured with sending the email
+      await User.findOneAndDelete({ _id: savedUser._id });
+      const err = {
+        status: 500,
+        message: `Error occurred while sending email. Please try again. ${error}`,
+      };
+      throw err;
+    }
   } catch (error) {
     // If a user already exists with the signing in users username or email
     if (
