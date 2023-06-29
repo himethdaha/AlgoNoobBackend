@@ -2,7 +2,7 @@ const fs = require("fs");
 const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const urlParser = require("url");
-const validateJWT = require("../utils/validateJWT");
+const validateJWT = require("../utils/jwt/validateJWT");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
 const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
@@ -20,9 +20,9 @@ const routes = {
       // get the body from request
       bodyParser.json()(req, res, () => {
         body = req.body;
-
+        console.log("signup");
         // Call signup event handler
-        userSignUpHandler(body)
+        userSignUpHandler(body, req)
           .then((response) => {
             res.status = 200;
             res.end(JSON.stringify(response));
@@ -95,6 +95,27 @@ const routes = {
       );
       res.status = 200;
       res.end(JSON.stringify({ message: "Logged out" }));
+    }
+  },
+  "/verifyme": function (req, res) {
+    if (req.method === "POST") {
+      let body;
+
+      bodyParser.json()(req, res, () => {
+        body = req.body;
+        userSignUpVerification(body)
+          .then((response) => {
+            console.log("response", response);
+            res.status = 200;
+            res.end(JSON.stringify(response));
+          })
+          .catch((err) => {
+            console.log("err");
+            console.log(err);
+            res.status = err.status;
+            res.end(JSON.stringify(err));
+          });
+      });
     }
   },
   "/forgot_password": function (req, res) {

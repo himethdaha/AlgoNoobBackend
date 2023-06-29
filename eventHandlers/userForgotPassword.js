@@ -1,5 +1,5 @@
 const User = require("../database/models/userModel");
-const emailSender = require("../utils/emailSender");
+const { resetPasswordEmail } = require("../utils/email/emailSender");
 
 async function userForgotPassword(body, req) {
   // Variables
@@ -8,22 +8,25 @@ async function userForgotPassword(body, req) {
     message: "Incorrect Email Address",
   };
   // Find the user via email provided
+  console.log(
+    "🚀 ~ file: userForgotPassword.js:12 ~ userForgotPassword ~ body.passwordResetEmail:",
+    body.passwordResetEmail
+  );
   const user = await User.findOne({ emailAddress: body.passwordResetEmail });
   if (!user) {
     throw err;
   } else {
     // Create the token to be sent to the user
-    const resetToken = await user.createResetPasswordToken();
-    console.log("resetToken", resetToken);
+    const resetToken = await user.createResetPasswordToken("resetPassword");
     await user.save();
 
     try {
-      await emailSender({
+      await resetPasswordEmail({
         userEmail: user.emailAddress,
         subject: `Reset Password Token`,
         text: `Please use this link (${
           req.headers.origin + "/reset_password/" + resetToken
-        }) to reset your password. Tokens will expire in 10 minutes. If this was not requested by you, please call "1-888-888888" or contact us via the contact form`,
+        }) to reset your password. Link will expire in 10 minutes. If this was not requested by you, please call "1-888-888888" or contact us via the contact form`,
       });
       return { status: 200, message: "Email sent successfully" };
     } catch (error) {

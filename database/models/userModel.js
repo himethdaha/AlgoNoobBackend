@@ -107,6 +107,19 @@ const userSchema = new mongoose.Schema(
     rateLimitTimeStamp: {
       type: Date,
     },
+    // User verified flag
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    // User verification expiry timer
+    verifiedExpiry: {
+      type: Date,
+    },
+    // Token for verification once signed in
+    verifierToken: {
+      type: String,
+    },
   },
 
   // Include virtual properties in the JSON representation
@@ -183,12 +196,12 @@ userSchema.pre("save", function (next) {
 });
 
 // Methods
-userSchema.methods.createResetPasswordToken = async function () {
+userSchema.methods.createResetPasswordToken = async function (option) {
   const user = this;
-  console.log("user schema", user);
 
   // Create a 32 random byte
   const randomBytes = crypto.randomBytes(32).toString("hex");
+  console.log("🚀 ~ file: userModel.js:204 ~ randomBytes:", randomBytes);
 
   try {
     // Generate the hashed token
@@ -196,10 +209,17 @@ userSchema.methods.createResetPasswordToken = async function () {
       .createHash("sha256")
       .update(randomBytes)
       .digest("hex");
+    console.log("🚀 ~ file: userModel.js:211 ~ resetToken:", resetToken);
 
-    //save the hashed token to the database as a temporary password
-    user.passwordResetToken = resetToken;
-    user.passwordResetTokenExpirationTime = Date.now() + 10 * 60 * 1000;
+    option === "resetPassword"
+      ? //save the hashed token and exp time to the database as a temporary password
+        ((user.passwordResetTokenExpirationTime = Date.now() + 10 * 60 * 1000),
+        (user.passwordResetToken = resetToken))
+      : option === "verifyMe"
+      ? ((user.verifiedExpiry = Date.now() + 24 * 60 * 60 * 1000),
+        (user.verifierToken = resetToken))
+      : undefined;
+
     await user.save();
     // return the 32 random byte to be used by the user
     return randomBytes;
