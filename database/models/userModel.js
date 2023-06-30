@@ -201,7 +201,6 @@ userSchema.methods.createResetPasswordToken = async function (option) {
 
   // Create a 32 random byte
   const randomBytes = crypto.randomBytes(32).toString("hex");
-  console.log("🚀 ~ file: userModel.js:204 ~ randomBytes:", randomBytes);
 
   try {
     // Generate the hashed token
@@ -209,7 +208,6 @@ userSchema.methods.createResetPasswordToken = async function (option) {
       .createHash("sha256")
       .update(randomBytes)
       .digest("hex");
-    console.log("🚀 ~ file: userModel.js:211 ~ resetToken:", resetToken);
 
     option === "resetPassword"
       ? //save the hashed token and exp time to the database as a temporary password

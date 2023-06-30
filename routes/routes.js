@@ -9,6 +9,7 @@ const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
 const userForgotPassword = require("../eventHandlers/userForgotPassword");
 const userResetPassword = require("../eventHandlers/userResetPassword");
 const userUpdate = require("../eventHandlers/userUpdate");
+const userSignUpVerification = require("../eventHandlers/userSignUpVerification");
 
 const routes = {
   "/": function (req, res) {
@@ -110,7 +111,7 @@ const routes = {
             res.end(JSON.stringify(response));
           })
           .catch((err) => {
-            console.log("err");
+            console.log("routes err");
             console.log(err);
             res.status = err.status;
             res.end(JSON.stringify(err));
