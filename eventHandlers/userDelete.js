@@ -2,22 +2,16 @@ const User = require("../database/models/userModel");
 const { deleteUser } = require("../utils/email/emailSender");
 
 async function userDelete(decodedJwt) {
-  console.log(
-    "🚀 ~ file: userDelete.js:5 ~ userDelete ~ decodedJwt:",
-    decodedJwt
-  );
   try {
-    console.log("running");
     // Get the id from the token
     const id = decodedJwt.id;
-    console.log("🚀 ~ file: userDelete.js:13 ~ userDelete ~ id:", id);
 
     // Check if a user exists for it
     const user = await User.find({ _id: id });
-    console.log("🚀 ~ file: userDelete.js:17 ~ userDelete ~ user:", user);
+    console.log("🚀 ~ file: userDelete.js:11 ~ userDelete ~ user:", user);
 
-    if (!user) {
-      console.log("no user found");
+    if (user.length === 0) {
+      console.log("no user");
       throw (err = {
         status: 404,
         message: "Can not find user",
@@ -25,16 +19,13 @@ async function userDelete(decodedJwt) {
     }
 
     // Delete user
-    const deletedUser = await User.findOneAndDelete({ id: user._id });
-    console.log(
-      "🚀 ~ file: userDelete.js:20 ~ userDelete ~ deletedUser:",
-      deletedUser
-    );
+    const deletedUser = await User.findOneAndDelete({ _id: user._id });
 
     if (!deletedUser) {
+      console.log("no deleted user");
       throw (err = {
         status: 400,
-        message: "No users deleted",
+        message: "No user to be deleted",
       });
     }
     try {
@@ -55,7 +46,6 @@ async function userDelete(decodedJwt) {
       });
     }
   } catch (error) {
-    console.log("🚀 ~ file: userDelete.js:58 ~ userDelete ~ error:", error);
     if (error.status) {
       console.log("with status");
       throw (err = {

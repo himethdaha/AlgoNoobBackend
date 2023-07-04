@@ -28,6 +28,7 @@ async function userSignUpHandler(body, req) {
 
     // Send email for verification
     try {
+      throw new Error("blah");
       await verifySignUp({
         userEmail: savedUser.emailAddress,
         userName: savedUser.userName,
@@ -42,6 +43,10 @@ async function userSignUpHandler(body, req) {
           "Verification email sent successfully. Please check your email",
       };
     } catch (error) {
+      console.log(
+        "🚀 ~ file: userSignUpHandler.js:46 ~ userSignUpHandler ~ error:",
+        error
+      );
       // Delete user from database if an error occured with sending the email
       await User.findOneAndDelete({ _id: savedUser._id });
       const err = {

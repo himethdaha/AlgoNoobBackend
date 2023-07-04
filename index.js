@@ -2,10 +2,13 @@
 const http = require("http");
 const url = require("url");
 const dotenv = require("dotenv");
+const cron = require("node-cron");
+
 dotenv.config({ path: "./env" });
 
 const routes = require("./routes/routes");
 const User = require("./database/models/userModel");
+const removeUnverifiedUsers = require("./utils/cron/removeUnverified");
 
 const connectDB = require("./database/databaseConn");
 
@@ -65,3 +68,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(8000, "127.0.0.1", () => {
   console.log("listening on port 8000");
 });
+
+setInterval(removeUnverifiedUsers, 24 * 60 * 60 * 1000);
