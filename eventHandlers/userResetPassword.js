@@ -90,7 +90,6 @@ async function userResetPassword(body) {
       }
     }
   } catch (error) {
-    console.log("err", error);
     if (error.status) {
       throw (err = {
         status: error.status,

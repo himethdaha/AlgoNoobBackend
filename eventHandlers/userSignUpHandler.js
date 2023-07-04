@@ -28,7 +28,6 @@ async function userSignUpHandler(body, req) {
 
     // Send email for verification
     try {
-      throw new Error("blah");
       await verifySignUp({
         userEmail: savedUser.emailAddress,
         userName: savedUser.userName,
@@ -66,8 +65,16 @@ async function userSignUpHandler(body, req) {
         message: "User already exists. Please try again.",
       };
       throw err;
+    } else if (error.status) {
+      throw (err = {
+        status: error.status,
+        message: error.message,
+      });
     } else {
-      throw error;
+      throw (err = {
+        status: 500,
+        message: `Couldn't verify user due to backend failure: ${error}`,
+      });
     }
   }
 }

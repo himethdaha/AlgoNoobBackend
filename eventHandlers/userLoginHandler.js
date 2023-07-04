@@ -9,11 +9,11 @@ async function userAuthenticationHandler(body) {
   try {
     // Variables
     const user = await User.find({ userName: body["login-username"] }).exec();
+    console.log(
+      "🚀 ~ file: userLoginHandler.js:12 ~ userAuthenticationHandler ~ user:",
+      user
+    );
     let image;
-    const err = {
-      status: 400,
-      message: "Incorrect username or password",
-    };
     // Throw error for not being able to save the user to the database
     const resetPasswordRetryCountSaveError = {
       status: 500,
@@ -22,7 +22,15 @@ async function userAuthenticationHandler(body) {
 
     // If no user is found in the database
     if (user.length === 0) {
-      throw err;
+      throw (err = {
+        status: 400,
+        message: "Incorrect username or password",
+      });
+    } else if (user[0].verified === false) {
+      throw (err = {
+        status: 400,
+        message: "Please verify your email before logging in",
+      });
     } else {
       // Variables
       // Get the user passwordRetryCount
@@ -141,10 +149,16 @@ async function userAuthenticationHandler(body) {
       }
     }
   } catch (error) {
-    if (error) {
-      throw error;
+    if (error.status) {
+      throw (err = {
+        status: error.status,
+        message: error.message,
+      });
     } else {
-      throw new Error("Something went wrong");
+      throw (err = {
+        status: 500,
+        message: `Couldn't verify user due to backend failure: ${error}`,
+      });
     }
   }
 }

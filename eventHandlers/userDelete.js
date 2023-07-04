@@ -47,10 +47,14 @@ async function userDelete(decodedJwt) {
     }
   } catch (error) {
     if (error.status) {
-      console.log("with status");
       throw (err = {
         status: error.status,
         message: error.message,
+      });
+    } else {
+      throw (err = {
+        status: 500,
+        message: `Couldn't verify user due to backend failure: ${error}`,
       });
     }
 

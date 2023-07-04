@@ -2,7 +2,6 @@
 const http = require("http");
 const url = require("url");
 const dotenv = require("dotenv");
-const cron = require("node-cron");
 
 dotenv.config({ path: "./env" });
 

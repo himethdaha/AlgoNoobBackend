@@ -133,6 +133,16 @@ async function userUpdate(req) {
         message:
           "Updating values already exists. Please try again with new values",
       });
+    } else if (error.status) {
+      throw (err = {
+        status: error.status,
+        message: error.message,
+      });
+    } else {
+      throw (err = {
+        status: 500,
+        message: `Couldn't verify user due to backend failure: ${error}`,
+      });
     }
     throw error;
   }

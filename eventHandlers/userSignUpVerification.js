@@ -98,8 +98,6 @@ async function userSignUpVerification(body) {
       }
     }
   } catch (error) {
-    console.log("error in func");
-    console.log(error);
     if (error.status) {
       throw (err = {
         status: error.status,
