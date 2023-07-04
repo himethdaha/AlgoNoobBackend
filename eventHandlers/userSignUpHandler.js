@@ -46,7 +46,7 @@ async function userSignUpHandler(body, req) {
       await User.findOneAndDelete({ _id: savedUser._id });
       const err = {
         status: 500,
-        message: `Error occurred while sending email. Please try again. ${error}`,
+        message: `Error occurred while signing up. Please try again. ${error}`,
       };
       throw err;
     }

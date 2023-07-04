@@ -4,7 +4,11 @@ const readFileAsync = promisify(fs.readFile);
 const jwt = require("jsonwebtoken");
 const publicKeyPath = "public.key";
 
-const validateJWT = async (req, callback) => {
+const validateJWT = async (req, callback, sendDecode) => {
+  console.log(
+    "🚀 ~ file: validateJWT.js:8 ~ validateJWT ~ sendDecode:",
+    sendDecode
+  );
   try {
     // Read the public key
     const publicKey = await readFileAsync(publicKeyPath);
@@ -51,6 +55,9 @@ const validateJWT = async (req, callback) => {
               return callback(error);
             }
           } else {
+            console.log("🚀 ~ file: validateJWT.js:39 ~ decoded:", decoded);
+
+            if (sendDecode) return callback(null, decoded);
             return callback(null, true);
           }
         });

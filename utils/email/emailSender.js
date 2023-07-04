@@ -52,5 +52,26 @@ const resetPasswordEmail = async function (options) {
   // Send email
   await createTransporter(optionsForEmail);
 };
+// Email to delete user
+const deleteUser = async function (options) {
+  // Get the html file
+  const html = pug.renderFile(`${__dirname}/deleteTemp.pug`, {
+    userName: options.userName,
+    subject: options.subject,
+    url: options.url,
+    contact: options.contact,
+  });
 
-module.exports = { verifySignUp, resetPasswordEmail };
+  // Options for the email
+  const optionsForEmail = {
+    from: '"AlgoNoob Admin 👻" <admin@algonoob.com>', // sender address
+    to: options.userEmail, // list of receivers
+    subject: options.subject, // Subject line
+    text: htmlToText(html), // plain text body
+    html, // html body
+  };
+  // Send email
+  await createTransporter(optionsForEmail);
+};
+
+module.exports = { verifySignUp, resetPasswordEmail, deleteUser };

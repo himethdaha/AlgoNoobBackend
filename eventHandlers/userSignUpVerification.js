@@ -1,5 +1,6 @@
 const User = require("../database/models/userModel");
 const getProfilePic = require("../utils/getProfilePic");
+const generateJWT = require("../utils/jwt/generateJWT");
 const crypto = require("crypto");
 
 async function userSignUpVerification(body) {
@@ -53,22 +54,47 @@ async function userSignUpVerification(body) {
       }
       // If all is good, remove the token/expiry an verified flag
       else {
-        console.log("verified");
-        user.verified = true;
-        user.verifiedExpiry = undefined;
-        user.verifierToken = undefined;
+        try {
+          // Generate JWT
+          const { token, cookie } = await new Promise((resolve, reject) => {
+            console.log("inside1");
+            generateJWT(user[0]._id, function (error, { token, cookie }) {
+              if (error) {
+                const err = {
+                  status: 500,
+                  message: `Error Generating JWT. ${error}`,
+                };
+                return reject(err);
+              } else if (token) {
+                resolve({ token, cookie });
+              } else {
+                const err = {
+                  status: 500,
+                  message: `No token available`,
+                };
+                return reject(err);
+              }
+            });
+          });
+          console.log("verified");
+          user.verified = true;
+          user.verifiedExpiry = undefined;
+          user.verifierToken = undefined;
 
-        // Read default user image
-        const image = await getProfilePic(user);
+          // Read default user image
+          const image = await getProfilePic(user);
 
-        await user.save();
+          await user.save();
 
-        return {
-          status: 200,
-          message: "User verified successfully",
-          userName: user.userName,
-          image: image,
-        };
+          return {
+            status: 200,
+            message: "User verified successfully",
+            userName: user.userName,
+            image: image,
+            jwtoken: token,
+            cookieOptions: cookie,
+          };
+        } catch (error) {}
       }
     }
   } catch (error) {

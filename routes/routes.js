@@ -3,12 +3,14 @@ const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const urlParser = require("url");
 const validateJWT = require("../utils/jwt/validateJWT");
+const createCookie = require("../utils/jwt/createCookie");
 const User = require("../database/models/userModel");
 const userAuthenticationHandler = require("../eventHandlers/userLoginHandler");
 const userSignUpHandler = require("../eventHandlers/userSignUpHandler");
 const userForgotPassword = require("../eventHandlers/userForgotPassword");
 const userResetPassword = require("../eventHandlers/userResetPassword");
 const userUpdate = require("../eventHandlers/userUpdate");
+const userDelete = require("../eventHandlers/userDelete");
 const userSignUpVerification = require("../eventHandlers/userSignUpVerification");
 
 const routes = {
@@ -57,16 +59,7 @@ const routes = {
             };
 
             // Concatnate cookie options
-            const cookieOptions = Object.entries(options)
-              .map(([key, value]) => {
-                if (key === "Expires") {
-                  const date = value.toUTCString();
-                  return `${key}=${date}`;
-                } else {
-                  return `${key}=${value}`;
-                }
-              })
-              .join("; ");
+            const cookieOptions = createCookie(options);
 
             // Set cookie in response header
             res.setHeader("Set-Cookie", cookieOptions);
@@ -108,6 +101,24 @@ const routes = {
           .then((response) => {
             console.log("response", response);
             res.status = 200;
+            const { expires, secure, httpOnly } = response.cookieOptions;
+
+            const options = {
+              jwt: response.jwtoken,
+              Expires: expires,
+              Secure: secure,
+              HttpOnly: httpOnly,
+            };
+
+            // Concatnate cookie options
+            const cookieOptions = createCookie(options);
+            console.log(
+              "🚀 ~ file: routes.js:114 ~ .then ~ cookieOptions:",
+              cookieOptions
+            );
+
+            // Set cookie in response header
+            res.setHeader("Set-Cookie", cookieOptions);
             res.end(JSON.stringify(response));
           })
           .catch((err) => {
@@ -161,10 +172,10 @@ const routes = {
       });
     }
   },
-  "/My_Account/Update": async function (req, res) {
+  "/my_Account/update": async function (req, res) {
     if (req.method === "PATCH") {
-      // First check if user authenticated
       try {
+        // First check if user authenticated
         await validateJWT(req, function (err, response) {
           if (err) {
             res.status = err.status;
@@ -184,6 +195,42 @@ const routes = {
             res.end(JSON.stringify(err));
           });
       } catch (err) {
+        res.status = err.status;
+        res.end(JSON.stringify(err));
+      }
+    }
+  },
+  "/my_Account/delete": async function (req, res) {
+    if (req.method == "POST") {
+      try {
+        let decoded;
+        // First check if user authenticated
+        await validateJWT(
+          req,
+          function (err, response) {
+            if (err) {
+              res.status = err.status;
+              res.end(JSON.stringify(err));
+            } else {
+              decoded = response;
+            }
+          },
+          true
+        );
+        console.log("🚀 ~ file: routes.js:219 ~ decodedRoutes:", decoded);
+
+        if (decoded) {
+          userDelete(decoded)
+            .then((response) => {
+              res.status = 200;
+              res.end(JSON.stringify(response));
+            })
+            .catch((err) => {
+              res.status = err.status;
+              res.end(JSON.stringify(err));
+            });
+        }
+      } catch (error) {
         res.status = err.status;
         res.end(JSON.stringify(err));
       }

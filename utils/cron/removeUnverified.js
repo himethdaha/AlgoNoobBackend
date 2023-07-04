@@ -35,4 +35,5 @@ const removeUnverifiedUsers = async () => {
 };
 
 // Run the cron job every 1 hour
-setInterval(removeUnverifiedUsers, 24 * 60 * 60 * 1000);
+const cron = setInterval(removeUnverifiedUsers, 1000);
+console.log("🚀 ~ file: removeUnverified.js:39 ~ cron:", cron);
