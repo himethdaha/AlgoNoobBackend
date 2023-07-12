@@ -8,10 +8,6 @@ async function userForgotPassword(body, req) {
     message: "Incorrect Email Address",
   };
   // Find the user via email provided
-  console.log(
-    "🚀 ~ file: userForgotPassword.js:12 ~ userForgotPassword ~ body.passwordResetEmail:",
-    body.passwordResetEmail
-  );
   const user = await User.findOne({ emailAddress: body.passwordResetEmail });
   if (!user) {
     throw err;

@@ -27,10 +27,8 @@ const removeUnverifiedUsers = async () => {
         JSON.stringify(allUsers) + "\n",
         function (err) {
           if (err) {
-            console.log("🚀 ~ file: removeUnverified.js:29 ~ err:", err);
             return;
           }
-          console.log("Done writing error");
         }
       );
     }
@@ -45,10 +43,8 @@ const removeUnverifiedUsers = async () => {
       JSON.stringify(content) + "\n",
       function (err) {
         if (err) {
-          console.log("🚀 ~ file: removeUnverified.js:29 ~ err:", err);
           return;
         }
-        console.log("Done writing error");
       }
     );
   }

@@ -7,20 +7,10 @@ async function userSignUpVerification(body) {
   try {
     // Get the token
     const token = body.token;
-    console.log(
-      "🚀 ~ file: userSignUpVerification.js:7 ~ userSignUpVerification ~ token:",
-      token
-    );
 
     // Check if the token exists
     if (!token) {
-      console.log("no token found");
-      throw (err = {
-        status: 400,
-        message: "Verification token can not be found. Please try again",
-      });
     } else {
-      console.log("token found");
       // If token exists, encrypt it
       const encryptedToken = crypto
         .createHash("sha256")
@@ -31,14 +21,9 @@ async function userSignUpVerification(body) {
       const user = await User.findOne({
         verifierToken: encryptedToken,
       });
-      console.log(
-        "🚀 ~ file: userSignUpVerification.js:31 ~ userSignUpVerification ~ user:",
-        user
-      );
 
       // If no user, send error message
       if (!user) {
-        console.log("no user found");
         throw (err = {
           status: 404,
           message: "No user found to be verified. Please try again",
@@ -46,7 +31,6 @@ async function userSignUpVerification(body) {
       }
       // If token expired, send error message saying sign up again
       else if (user.verifiedExpiry <= new Date()) {
-        console.log("expired");
         throw (err = {
           status: 400,
           message: "Link expired. Please sign up again",
@@ -57,8 +41,8 @@ async function userSignUpVerification(body) {
         try {
           // Generate JWT
           const { token, cookie } = await new Promise((resolve, reject) => {
-            console.log("inside1");
-            generateJWT(user[0]._id, function (error, { token, cookie }) {
+            // TODO: Remove the [0]
+            generateJWT(user._id, function (error, { token, cookie }) {
               if (error) {
                 const err = {
                   status: 500,
@@ -76,7 +60,6 @@ async function userSignUpVerification(body) {
               }
             });
           });
-          console.log("verified");
           user.verified = true;
           user.verifiedExpiry = undefined;
           user.verifierToken = undefined;
@@ -94,7 +77,12 @@ async function userSignUpVerification(body) {
             jwtoken: token,
             cookieOptions: cookie,
           };
-        } catch (error) {}
+        } catch (error) {
+          throw (err = {
+            status: 500,
+            message: error,
+          });
+        }
       }
     }
   } catch (error) {

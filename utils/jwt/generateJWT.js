@@ -23,7 +23,6 @@ const generateJWT = (userId, callback) => {
           },
           function (err, token) {
             if (err) {
-              console.log("err jsw", err);
               const error = {
                 status: 500,
                 message: `Error generating JWT. ${err}`,

@@ -18,49 +18,83 @@ async function userUpdate(req) {
     const form = new formidable.IncomingForm();
 
     // Get the form data
-    const getFormData = new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) {
-          console.log(err);
-          reject(
-            (err = {
-              status: 500,
-              message: "Error while parsing form data",
-            })
+    const getFormData = () => {
+      return new Promise((resolve, reject) => {
+        form.parse(req, (err, fields, files) => {
+          if (err) {
+            console.log(err);
+            reject(
+              (err = {
+                status: 500,
+                message: "Error while parsing form data",
+              })
+            );
+          }
+          // Get form fields data
+          allFields = JSON.parse(fields.jsonData);
+          console.log(
+            "🚀 ~ file: userUpdate.js:46 ~ form.parse ~ allFields:",
+            allFields
           );
-        }
-        // Get form fields data
-        allFields = JSON.parse(fields.jsonData);
 
-        // Access files
-        if (Object.keys(files).length > 0) {
-          console.log("files", files);
-          const file = files.profilepic;
+          // Access files
+          if (Object.keys(files).length > 0) {
+            console.log("files", files);
+            const file = files.profilepic;
 
-          // File path
-          const filePath = `resources/images/users/${file.originalFilename}`;
+            // pfp name to be saved
+            const fileName = `${allFields.user}-${file.originalFilename}`;
 
-          // Files destination
-          fs.rename(file.filepath, filePath, (err) => {
-            if (err) {
-              reject(
-                (err = {
-                  status: 500,
-                  message: "Error while saving profile picture",
-                })
-              );
-            }
-            allFields.profilepic = file.originalFilename;
-          });
-        }
+            // File path
+            const filePath = `resources/images/users/${fileName}`;
 
-        resolve(allFields);
+            // Files destination
+            fs.rename(file.filepath, filePath, (err) => {
+              if (err) {
+                reject(
+                  (err = {
+                    status: 500,
+                    message: "Error while saving profile picture",
+                  })
+                );
+              }
+              allFields.profilepic = fileName;
+            });
+          }
+
+          resolve(allFields);
+        });
       });
-    });
+    };
 
-    userUpdateFields = await getFormData;
+    userUpdateFields = await getFormData();
 
-    // Find user based on username in url
+    // Find user based on username
+    const prevUser = await User.find({
+      userName: userUpdateFields.user,
+    }).exec();
+    console.log(
+      "🚀 ~ file: userUpdate.js:71 ~ userUpdate ~ prevUser:",
+      prevUser
+    );
+
+    // Check if they have a pfp already uploaded
+    if (prevUser[0].profilepic !== "default.jpeg") {
+      // If so, remove that first from the filesystem
+      fs.unlink(`resources/images/users/${prevUser[0].profilepic}`, (err) => {
+        if (err) {
+          const error = {
+            status: 500,
+            message: `Error removing previous pfp. ${err}`,
+          };
+
+          throw error;
+        }
+        console.log("Removed previous pfp");
+        return;
+      });
+    }
+    // Then, update
     const user = await User.find({
       userName: userUpdateFields.user,
     }).exec();
@@ -127,6 +161,7 @@ async function userUpdate(req) {
       }
     }
   } catch (error) {
+    console.log("🚀 ~ file: userUpdate.js:163 ~ userUpdate ~ error:", error);
     if (error.code === 11000) {
       throw (error = {
         status: 400,

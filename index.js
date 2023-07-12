@@ -26,9 +26,6 @@ const connectDB = require("./database/databaseConn");
 const server = http.createServer(async (req, res) => {
   // Variables
   const path = req.url;
-  console.log(path);
-  console.log(req.method);
-
   const errorMsg = { message: "404 Not Found" };
 
   // Set CORS

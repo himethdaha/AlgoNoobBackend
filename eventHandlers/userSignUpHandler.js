@@ -21,7 +21,6 @@ async function userSignUpHandler(body, req) {
 
     // Save user to database
     const savedUser = await user.save();
-    console.log("saved user", savedUser);
 
     // Create the token to be sent to the user
     const verifierToken = await user.createResetPasswordToken("verifyMe");
@@ -42,10 +41,6 @@ async function userSignUpHandler(body, req) {
           "Verification email sent successfully. Please check your email",
       };
     } catch (error) {
-      console.log(
-        "🚀 ~ file: userSignUpHandler.js:46 ~ userSignUpHandler ~ error:",
-        error
-      );
       // Delete user from database if an error occured with sending the email
       await User.findOneAndDelete({ _id: savedUser._id });
       const err = {

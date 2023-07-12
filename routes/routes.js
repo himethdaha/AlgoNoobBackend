@@ -23,7 +23,6 @@ const routes = {
       // get the body from request
       bodyParser.json()(req, res, () => {
         body = req.body;
-        console.log("signup");
         // Call signup event handler
         userSignUpHandler(body, req)
           .then((response) => {
@@ -42,7 +41,6 @@ const routes = {
       let body;
       //Parse user request
       bodyParser.json()(req, res, () => {
-        console.log("cred", req.credentials);
         body = req.body;
 
         // Call login event handler
@@ -81,7 +79,6 @@ const routes = {
   },
   "/logout": function (req, res) {
     if (req.method === "POST") {
-      console.log(req.headers.cookie);
       // Set a cookie to expire
       res.setHeader(
         "Set-Cookie",
@@ -99,7 +96,6 @@ const routes = {
         body = req.body;
         userSignUpVerification(body)
           .then((response) => {
-            console.log("response", response);
             res.status = 200;
             const { expires, secure, httpOnly } = response.cookieOptions;
 
@@ -112,18 +108,12 @@ const routes = {
 
             // Concatnate cookie options
             const cookieOptions = createCookie(options);
-            console.log(
-              "🚀 ~ file: routes.js:114 ~ .then ~ cookieOptions:",
-              cookieOptions
-            );
 
             // Set cookie in response header
             res.setHeader("Set-Cookie", cookieOptions);
             res.end(JSON.stringify(response));
           })
           .catch((err) => {
-            console.log("routes err");
-            console.log(err);
             res.status = err.status;
             res.end(JSON.stringify(err));
           });
@@ -135,18 +125,14 @@ const routes = {
       let body;
 
       bodyParser.json()(req, res, () => {
-        console.log("bodyParser req", req.headers.origin);
         body = req.body;
         // Call the forgot password event handler
         userForgotPassword(body, req)
           .then((response) => {
-            console.log("response", response);
             res.status = 200;
             res.end(JSON.stringify(response));
           })
           .catch((err) => {
-            console.log("err");
-            console.log(err);
             res.status = err.status;
             res.end(JSON.stringify(err));
           });
@@ -155,7 +141,6 @@ const routes = {
   },
   "/reset_password": function (req, res) {
     if (req.method === "PATCH") {
-      console.log("req", req.url);
       let body;
       bodyParser.json()(req, res, () => {
         body = req.body;
@@ -217,7 +202,6 @@ const routes = {
           },
           true
         );
-        console.log("🚀 ~ file: routes.js:219 ~ decodedRoutes:", decoded);
 
         if (decoded) {
           userDelete(decoded)

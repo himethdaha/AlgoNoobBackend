@@ -3,7 +3,6 @@ const { promisify } = require("util");
 const readFileAsync = promisify(fs.readFile);
 
 const getProfilePic = async (user) => {
-  console.log("🚀 ~ file: getProfilePic.js:6 ~ getProfilePic ~ user:", user);
   // Read default or user image
   try {
     // Check if the image is the default or user uploaded

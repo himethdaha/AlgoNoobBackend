@@ -5,10 +5,6 @@ const jwt = require("jsonwebtoken");
 const publicKeyPath = "public.key";
 
 const validateJWT = async (req, callback, sendDecode) => {
-  console.log(
-    "🚀 ~ file: validateJWT.js:8 ~ validateJWT ~ sendDecode:",
-    sendDecode
-  );
   try {
     // Read the public key
     const publicKey = await readFileAsync(publicKeyPath);
@@ -29,7 +25,6 @@ const validateJWT = async (req, callback, sendDecode) => {
 
       // If no jwt cookie sent
       if (!jwtCookie) {
-        console.log("NO JWT cookie sent");
         const error = {
           status: 401,
           message: `Please login/signup to access`,
@@ -55,14 +50,11 @@ const validateJWT = async (req, callback, sendDecode) => {
               return callback(error);
             }
           } else {
-            console.log("🚀 ~ file: validateJWT.js:39 ~ decoded:", decoded);
-
             if (sendDecode) return callback(null, decoded);
             return callback(null, true);
           }
         });
       } catch (error) {
-        console.log("jwt error: " + error);
         throw error;
       }
     } else {

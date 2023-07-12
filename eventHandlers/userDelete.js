@@ -8,10 +8,8 @@ async function userDelete(decodedJwt) {
 
     // Check if a user exists for it
     const user = await User.find({ _id: id });
-    console.log("🚀 ~ file: userDelete.js:11 ~ userDelete ~ user:", user);
 
     if (user.length === 0) {
-      console.log("no user");
       throw (err = {
         status: 404,
         message: "Can not find user",
@@ -19,10 +17,9 @@ async function userDelete(decodedJwt) {
     }
 
     // Delete user
-    const deletedUser = await User.findOneAndDelete({ _id: user._id });
+    const deletedUser = await User.findOneAndDelete({ id: user._id });
 
     if (!deletedUser) {
-      console.log("no deleted user");
       throw (err = {
         status: 400,
         message: "No user to be deleted",
@@ -57,8 +54,6 @@ async function userDelete(decodedJwt) {
         message: `Couldn't verify user due to backend failure: ${error}`,
       });
     }
-
-    throw error;
   }
 }
 

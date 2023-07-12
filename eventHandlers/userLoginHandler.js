@@ -9,10 +9,7 @@ async function userAuthenticationHandler(body) {
   try {
     // Variables
     const user = await User.find({ userName: body["login-username"] }).exec();
-    console.log(
-      "🚀 ~ file: userLoginHandler.js:12 ~ userAuthenticationHandler ~ user:",
-      user
-    );
+
     let image;
     // Throw error for not being able to save the user to the database
     const resetPasswordRetryCountSaveError = {
@@ -80,15 +77,10 @@ async function userAuthenticationHandler(body) {
 
         // Read default or user image
         const image = await getProfilePic(user);
-        console.log(
-          "🚀 ~ file: userLoginHandler.js:75 ~ userAuthenticationHandler ~ image:",
-          image
-        );
 
         // Generate JWT
         try {
           const { token, cookie } = await new Promise((resolve, reject) => {
-            console.log("inside1");
             generateJWT(user[0]._id, function (error, { token, cookie }) {
               if (error) {
                 const err = {

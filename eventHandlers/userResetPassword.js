@@ -7,7 +7,6 @@ async function userResetPassword(body) {
     // Get the token
     const token = body.token;
 
-    console.log("token", token);
     // If token is undefined
     if (!token) {
       throw (err = {
@@ -23,12 +22,10 @@ async function userResetPassword(body) {
         .update(token)
         .digest("hex");
 
-      console.log("encryptToken", encryptedToken);
       // Compare the reset token with the encrypted tokens in the database
       const user = await User.findOne({
         passwordResetToken: encryptedToken,
       });
-      console.log("user", user);
       // If a user is found for the token
       if (user) {
         // If they do match, check if the time has expired. If so return error
