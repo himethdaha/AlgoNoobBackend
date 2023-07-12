@@ -2,9 +2,10 @@ const User = require("../../database/models/userModel");
 const fs = require("fs");
 
 const removeUnverifiedUsers = async () => {
+  let unverifiedExpiredUsers = [];
   try {
     // Get the users with verified flag 'false' and token time is <= current time
-    const unverifiedExpiredUsers = await User.find({
+    unverifiedExpiredUsers = await User.find({
       verified: false,
       verifiedExpiry: { $lt: Date.now() },
     });
@@ -19,26 +20,37 @@ const removeUnverifiedUsers = async () => {
       deleted,
     };
 
-    fs.writeFile("./deleted.txt", JSON.stringify(allUsers), function (err) {
-      if (err) {
-        console.log("🚀 ~ file: removeUnverified.js:29 ~ err:", err);
-        return;
-      }
-      console.log("Done writing error");
-    });
+    // If users are deleted
+    if (unverifiedExpiredUsers.length > 0) {
+      fs.appendFile(
+        "./utils/cron/deleted.txt",
+        JSON.stringify(allUsers) + "\n",
+        function (err) {
+          if (err) {
+            console.log("🚀 ~ file: removeUnverified.js:29 ~ err:", err);
+            return;
+          }
+          console.log("Done writing error");
+        }
+      );
+    }
   } catch (error) {
     const content = {
       users: unverifiedExpiredUsers,
       error: error,
     };
 
-    fs.writeFile("./error.txt", JSON.stringify(content), function (err) {
-      if (err) {
-        console.log("🚀 ~ file: removeUnverified.js:29 ~ err:", err);
-        return;
+    fs.appendFile(
+      "./utils/cron/error.txt",
+      JSON.stringify(content) + "\n",
+      function (err) {
+        if (err) {
+          console.log("🚀 ~ file: removeUnverified.js:29 ~ err:", err);
+          return;
+        }
+        console.log("Done writing error");
       }
-      console.log("Done writing error");
-    });
+    );
   }
 };
 
