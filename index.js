@@ -65,4 +65,4 @@ server.listen(8000, "127.0.0.1", () => {
   console.log("listening on port 8000");
 });
 
-setInterval(removeUnverifiedUsers, 60 * 1000);
+setInterval(removeUnverifiedUsers, 24 * 60 * 60 * 1000);

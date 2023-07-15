@@ -1,12 +1,12 @@
+// Imported modules
+const fs = require("fs");
+const sharp = require("sharp");
+
 const User = require("../database/models/userModel");
-const getProfilePic = require("../utils/getProfilePic");
+const { createObject } = require("../Cloud/s3Ops");
 const { verifySignUp } = require("../utils/email/emailSender");
 
-const generateJWT = require("../utils/jwt/generateJWT");
-
 async function userSignUpHandler(body, req) {
-  // Variables
-  let image;
   // Create user object
   const user = new User({
     emailAddress: body.email,
@@ -16,17 +16,50 @@ async function userSignUpHandler(body, req) {
   });
 
   try {
-    // Read default or user image
-    const image = await getProfilePic(user);
-
     // Save user to database
     const savedUser = await user.save();
 
     // Create the token to be sent to the user
     const verifierToken = await user.createResetPasswordToken("verifyMe");
 
-    // Send email for verification
     try {
+      // Stpes in saving default img to S3
+      // 1 - Get the image and convert to buffer
+      const fileBuffer = fs.readFileSync(
+        "C:\\Users\\himet\\OneDrive\\Documents\\React\\my-first-nodejs-backend\\resources\\images\\users"
+      );
+      // 2 - Resize it
+      const imageBuffer = sharp(fileBuffer)
+        .resize(110, 110)
+        .toFormat("jpeg")
+        .jpeg({ quality: 90 })
+        .toBuffer();
+      // 3 - Add image buffer to S3 params
+      const params = {
+        Bucket: process.env.BUCKET_NAME,
+        Key: `${process.env.KEY}/${savedUser.profilepic}`,
+        Body: imageBuffer,
+      };
+
+      // Call method to create object in S3
+      createObject(params)
+        .then((response) => {
+          console.log(
+            "🚀 ~ file: userSignUpHandler.js:43 ~ userSignUpHandler ~ response:",
+            response
+          );
+        })
+
+        .catch((err) => {
+          console.log(
+            "🚀 ~ file: userSignUpHandler.js:48 ~ userSignUpHandler ~ err:",
+            err
+          );
+          const error = `Error while uploading default image to S3. ${err}`;
+          throw error;
+        });
+
+      // Send email for verification
       await verifySignUp({
         userEmail: savedUser.emailAddress,
         userName: savedUser.userName,

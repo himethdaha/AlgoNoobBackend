@@ -1,7 +1,12 @@
+// Imported modules
 const fs = require("fs");
 const formidable = require("formidable");
+const sharp = require("sharp");
+
+// My modules
 const User = require("../database/models/userModel");
 const getProfilePic = require("../utils/getProfilePic");
+const { deleteObject, createObject } = require("../Cloud/s3Ops");
 
 async function userUpdate(req) {
   try {
@@ -10,15 +15,21 @@ async function userUpdate(req) {
     let updateBody = {};
     let allFields = {};
     let image;
-    let updatedUserName;
     let changeuserName = false;
     let changeProfilePic = false;
+
+    // Params for the S3 bucket
+    let params = {
+      Bucket: process.env.BUCKET_NAME,
+      Key: process.env.KEY,
+    };
+    console.log("🚀 ~ file: userUpdate.js:40 ~ userUpdate ~ params:", params);
 
     // Create instance of formidable to handle file data
     const form = new formidable.IncomingForm();
 
     // Get the form data
-    const getFormData = () => {
+    const getFormData = (prevUser) => {
       return new Promise((resolve, reject) => {
         form.parse(req, (err, fields, files) => {
           if (err) {
@@ -41,25 +52,67 @@ async function userUpdate(req) {
           if (Object.keys(files).length > 0) {
             console.log("files", files);
             const file = files.profilepic;
+            const fileBuffer = fs.readFileSync(file.filepath);
+            console.log(
+              "🚀 ~ file: userUpdate.js:49 ~ form.parse ~ fileBuffer:",
+              fileBuffer
+            );
 
             // pfp name to be saved
-            const fileName = `${allFields.user}-${file.originalFilename}`;
+            const fileName = `${allFields.user}.jpeg`;
 
-            // File path
-            const filePath = `resources/images/users/${fileName}`;
+            // Add filename to params
+            params.fileName = fileName;
 
-            // Files destination
-            fs.rename(file.filepath, filePath, (err) => {
-              if (err) {
-                reject(
-                  (err = {
-                    status: 500,
-                    message: "Error while saving profile picture",
-                  })
+            console.log(
+              "🚀 ~ file: userUpdate.js:52 ~ form.parse ~ fileName:",
+              fileName
+            );
+            // Resize image and save to filesystem
+            const imageBuffer = sharp(fileBuffer)
+              .resize(110, 110)
+              .toFormat("jpeg")
+              .jpeg({ quality: 90 })
+              .toBuffer();
+
+            // Add buffer to params body
+            params.Body = imageBuffer;
+
+            // Check if the user already has a pfp uploaded
+            if (prevUser[0].profilepic !== "default.jpeg") {
+              // Remove that first from the S3bucket
+              deleteObject(params, prevUser)
+                .then((response) => {
+                  console.log(
+                    "🚀 ~ file: userUpdate.js:89 ~ form.parse ~ response:",
+                    response
+                  );
+                  resolve(response);
+                })
+                .catch((error) => {
+                  reject(
+                    `An error occured while deleting previous user image in S3. ${error}`
+                  );
+                });
+            }
+
+            // Send the data to the S3
+            createObject(params)
+              .then((response) => {
+                console.log(
+                  "🚀 ~ file: userUpdate.js:131 ~ .then ~ response:",
+                  response
                 );
-              }
-              allFields.profilepic = fileName;
-            });
+
+                resolve(response);
+              })
+              .catch((error) => {
+                reject(
+                  `An error occured while creating user image in S3. ${error}`
+                );
+              });
+
+            allFields.profilepic = fileName;
           }
 
           resolve(allFields);
@@ -67,33 +120,18 @@ async function userUpdate(req) {
       });
     };
 
-    userUpdateFields = await getFormData();
-
     // Find user based on username
     const prevUser = await User.find({
       userName: userUpdateFields.user,
     }).exec();
+
     console.log(
       "🚀 ~ file: userUpdate.js:71 ~ userUpdate ~ prevUser:",
       prevUser
     );
 
-    // Check if they have a pfp already uploaded
-    if (prevUser[0].profilepic !== "default.jpeg") {
-      // If so, remove that first from the filesystem
-      fs.unlink(`resources/images/users/${prevUser[0].profilepic}`, (err) => {
-        if (err) {
-          const error = {
-            status: 500,
-            message: `Error removing previous pfp. ${err}`,
-          };
+    userUpdateFields = await getFormData(prevUser);
 
-          throw error;
-        }
-        console.log("Removed previous pfp");
-        return;
-      });
-    }
     // Then, update
     const user = await User.find({
       userName: userUpdateFields.user,
@@ -142,7 +180,7 @@ async function userUpdate(req) {
 
         // Must send new profile pic and username if changed
         if (changeProfilePic) {
-          console.log("chaning pfp");
+          console.log("changing pfp");
           // Get the default/new user profile picture
           image = await getProfilePic(updatedUser);
           returningObj.image = image;
@@ -179,7 +217,6 @@ async function userUpdate(req) {
         message: `Couldn't verify user due to backend failure: ${error}`,
       });
     }
-    throw error;
   }
 }
 
