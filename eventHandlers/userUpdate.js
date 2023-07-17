@@ -54,6 +54,10 @@ async function userUpdate(req) {
             const file = files.profilepic;
             const fileBuffer = fs.readFileSync(file.filepath);
             console.log(
+              "🚀 ~ file: userUpdate.js:57 ~ form.parse ~ file.filepath:",
+              file.filepath
+            );
+            console.log(
               "🚀 ~ file: userUpdate.js:49 ~ form.parse ~ fileBuffer:",
               fileBuffer
             );
@@ -61,54 +65,43 @@ async function userUpdate(req) {
             // pfp name to be saved
             const fileName = `${allFields.user}.jpeg`;
 
-            // Add filename to params
-            params.fileName = fileName;
-
             console.log(
               "🚀 ~ file: userUpdate.js:52 ~ form.parse ~ fileName:",
               fileName
             );
             // Resize image and save to filesystem
-            const imageBuffer = sharp(fileBuffer)
+            sharp(fileBuffer)
               .resize(110, 110)
               .toFormat("jpeg")
               .jpeg({ quality: 90 })
-              .toBuffer();
-
-            // Add buffer to params body
-            params.Body = imageBuffer;
-
-            // Check if the user already has a pfp uploaded
-            if (prevUser[0].profilepic !== "default.jpeg") {
-              // Remove that first from the S3bucket
-              deleteObject(params, prevUser)
-                .then((response) => {
-                  console.log(
-                    "🚀 ~ file: userUpdate.js:89 ~ form.parse ~ response:",
-                    response
-                  );
-                  resolve(response);
-                })
-                .catch((error) => {
-                  reject(
-                    `An error occured while deleting previous user image in S3. ${error}`
-                  );
-                });
-            }
-
-            // Send the data to the S3
-            createObject(params)
+              .toBuffer()
               .then((response) => {
                 console.log(
-                  "🚀 ~ file: userUpdate.js:131 ~ .then ~ response:",
-                  response
+                  "Sharp module successfully, converted image to buffer"
                 );
-
-                resolve(response);
+                // Add buffer to params body
+                params.Body = response;
+                params.Key = `${process.env.KEY}${allFields.user}/${fileName}`;
+                // Send the data to the S3
+                createObject(params)
+                  .then(() => {
+                    console.log(
+                      "🚀 ~ file: userUpdate.js:131 ~ .then ~ response:"
+                    );
+                  })
+                  .catch((error) => {
+                    reject(
+                      `An error occured while creating user image in S3. ${error}`
+                    );
+                  });
               })
-              .catch((error) => {
+              .catch((err) => {
+                console.log(
+                  "🚀 ~ file: userUpdate.js:84 ~ form.parse ~ err:",
+                  err
+                );
                 reject(
-                  `An error occured while creating user image in S3. ${error}`
+                  `An error occurred while converting image to buffer via sharp. ${err}`
                 );
               });
 
@@ -120,17 +113,7 @@ async function userUpdate(req) {
       });
     };
 
-    // Find user based on username
-    const prevUser = await User.find({
-      userName: userUpdateFields.user,
-    }).exec();
-
-    console.log(
-      "🚀 ~ file: userUpdate.js:71 ~ userUpdate ~ prevUser:",
-      prevUser
-    );
-
-    userUpdateFields = await getFormData(prevUser);
+    userUpdateFields = await getFormData();
 
     // Then, update
     const user = await User.find({
@@ -183,6 +166,10 @@ async function userUpdate(req) {
           console.log("changing pfp");
           // Get the default/new user profile picture
           image = await getProfilePic(updatedUser);
+          console.log(
+            "🚀 ~ file: userUpdate.js:170 ~ userUpdate ~ image:",
+            image
+          );
           returningObj.image = image;
         }
 

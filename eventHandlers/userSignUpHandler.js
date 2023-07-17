@@ -18,7 +18,7 @@ async function userSignUpHandler(body, req) {
   try {
     // Save user to database
     const savedUser = await user.save();
-
+    console.log(`SAVED USER PFP. => ${savedUser.profilepic}`);
     // Create the token to be sent to the user
     const verifierToken = await user.createResetPasswordToken("verifyMe");
 
@@ -26,27 +26,36 @@ async function userSignUpHandler(body, req) {
       // Stpes in saving default img to S3
       // 1 - Get the image and convert to buffer
       const fileBuffer = fs.readFileSync(
-        "C:\\Users\\himet\\OneDrive\\Documents\\React\\my-first-nodejs-backend\\resources\\images\\users"
+        "C:\\Users\\himet\\OneDrive\\Documents\\React\\my-first-nodejs-backend\\resources\\images\\users\\default.jpeg"
       );
       // 2 - Resize it
-      const imageBuffer = sharp(fileBuffer)
+      const imageBuffer = await sharp(fileBuffer)
         .resize(110, 110)
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
         .toBuffer();
+      console.log(
+        "🚀 ~ file: userSignUpHandler.js:33 ~ userSignUpHandler ~ imageBuffer:",
+        imageBuffer
+      );
+
       // 3 - Add image buffer to S3 params
       const params = {
         Bucket: process.env.BUCKET_NAME,
-        Key: `${process.env.KEY}/${savedUser.profilepic}`,
+        Key: `${process.env.KEY}${savedUser.userName}/${savedUser.profilepic}`,
         Body: imageBuffer,
       };
+      console.log(
+        "🚀 ~ file: userSignUpHandler.js:48 ~ userSignUpHandler ~ params:",
+        params
+      );
 
       // Call method to create object in S3
       createObject(params)
         .then((response) => {
           console.log(
             "🚀 ~ file: userSignUpHandler.js:43 ~ userSignUpHandler ~ response:",
-            response
+            JSON.stringify(response)
           );
         })
 
@@ -83,6 +92,10 @@ async function userSignUpHandler(body, req) {
       throw err;
     }
   } catch (error) {
+    console.log(
+      "🚀 ~ file: userSignUpHandler.js:86 ~ userSignUpHandler ~ error:",
+      error
+    );
     // If a user already exists with the signing in users username or email
     if (
       error.code === 11000 &&

@@ -41,7 +41,6 @@ async function userSignUpVerification(body) {
         try {
           // Generate JWT
           const { token, cookie } = await new Promise((resolve, reject) => {
-            // TODO: Remove the [0]
             generateJWT(user._id, function (error, { token, cookie }) {
               if (error) {
                 const err = {
@@ -66,6 +65,10 @@ async function userSignUpVerification(body) {
 
           // Read default user image
           const image = await getProfilePic(user);
+          console.log(
+            "🚀 ~ file: userSignUpVerification.js:68 ~ userSignUpVerification ~ image:",
+            image
+          );
 
           await user.save();
 

@@ -10,10 +10,10 @@ module.exports = {
     try {
       const deletedObject = new DeleteObjectCommand({
         Bucket: params.Bucket,
-        Key: `${params.Key}/${prevUser[0].userName}.jpeg`,
+        Key: `${params.Key}${prevUser[0].profilepic}`,
       });
 
-      const deleteResponse = await s3Client.send(deletedObject);
+      const deleteResponse = await s3Client().send(deletedObject);
       return `Successfully deleted object ${deleteResponse}`;
     } catch (error) {
       const err = `Error while deleting object ${error}`;
@@ -25,11 +25,12 @@ module.exports = {
     try {
       const createdObject = new PutObjectCommand({
         Bucket: params.Bucket,
-        Key: `${params.Key}/${params.fileName}`,
+        Key: params.Key,
         Body: params.Body,
       });
+      console.log("🚀 ~ file: s3Ops.js:31 ~ createdObject:", createdObject);
 
-      const createResponse = await s3Client.send(createdObject);
+      const createResponse = await s3Client().send(createdObject);
       return `Successfully created object ${createResponse}`;
     } catch (error) {
       console.log("🚀 ~ file: s3Ops.js:35 ~ error:", error);
@@ -42,11 +43,11 @@ module.exports = {
     try {
       const getObject = new GetObjectCommand({
         Bucket: params.Bucket,
-        Key: `${params.Key}/${params.fileName}`,
+        Key: `${params.Key}`,
       });
+      console.log("🚀 ~ file: s3Ops.js:48 ~ getObject:", params);
 
-      const getResponse = await s3Client.send(getObject);
-      console.log("Successfully retrieved object from s3");
+      const getResponse = await s3Client().send(getObject);
       return getResponse.Body;
     } catch (error) {
       console.log("🚀 ~ file: s3Ops.js:52 ~ error:", error);
