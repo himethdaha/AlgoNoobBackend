@@ -21,6 +21,7 @@
 .vscode
 *.md
 *.key
+*.txt
 /resources
 
 npm-debug.log*

@@ -31,7 +31,7 @@ async function userDelete(decodedJwt) {
 
     keys.forEach(async (key) => {
       params.Key = key;
-      const response = await deleteObject(params);
+      await deleteObject(params);
     });
 
     if (!deletedUser) {

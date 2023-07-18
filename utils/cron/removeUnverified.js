@@ -7,7 +7,7 @@ const removeUnverifiedUsers = async () => {
     // Get the users with verified flag 'false' and token time is <= current time
     unverifiedExpiredUsers = await User.find({
       verified: false,
-      verifiedExpiry: { $lt: Date.now() },
+      verifiedExpiry: { $lt: new Date() },
     });
 
     // Delete all unverified users
@@ -19,6 +19,10 @@ const removeUnverifiedUsers = async () => {
       unverifiedExpiredUsers,
       deleted,
     };
+    console.log(
+      "🚀 ~ file: removeUnverified.js:21 ~ removeUnverifiedUsers ~ allUsers:",
+      allUsers
+    );
 
     // If users are deleted
     if (unverifiedExpiredUsers.length > 0) {
