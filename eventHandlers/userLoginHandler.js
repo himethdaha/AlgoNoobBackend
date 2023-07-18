@@ -77,10 +77,6 @@ async function userAuthenticationHandler(body) {
 
         // Read default or user image
         const image = await getProfilePic(user);
-        console.log(
-          "🚀 ~ file: userLoginHandler.js:80 ~ userAuthenticationHandler ~ image:",
-          image
-        );
 
         // Generate JWT
         try {

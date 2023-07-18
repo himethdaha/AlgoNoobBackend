@@ -1,0 +1,1 @@
+{"users":[],"error":{"reason":{"type":"ReplicaSetNoPrimary","servers":{},"stale":false,"compatible":true,"heartbeatFrequencyMS":10000,"localThresholdMS":15,"setName":"atlas-65yjjr-shard-0","maxElectionId":"7fffffff00000000000000b8","maxSetVersion":11,"commonWireVersion":0,"logicalSessionTimeoutMinutes":null}}}

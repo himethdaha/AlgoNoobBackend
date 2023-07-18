@@ -1,22 +1,47 @@
 const {
   GetObjectCommand,
   PutObjectCommand,
+  ListObjectsCommand,
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { s3Client } = require("./clients");
 
 module.exports = {
-  deleteObject: async function (params, prevUser) {
+  deleteObject: async function (params) {
     try {
       const deletedObject = new DeleteObjectCommand({
         Bucket: params.Bucket,
-        Key: `${params.Key}${prevUser[0].profilepic}`,
+        Key: params.Key,
       });
 
       const deleteResponse = await s3Client().send(deletedObject);
-      return `Successfully deleted object ${deleteResponse}`;
+      console.log("🚀 ~ file: s3Ops.js:17 ~ deleteResponse:", deleteResponse);
+
+      return `Successfully deleted object`;
     } catch (error) {
       const err = `Error while deleting object ${error}`;
+      throw err;
+    }
+  },
+
+  listObjects: async function (params) {
+    console.log("🚀 ~ file: s3Ops.js:28 ~ params:", params);
+    try {
+      const list = [];
+      const objectList = new ListObjectsCommand({
+        Bucket: params.Bucket,
+        Prefix: params.Key,
+      });
+
+      const listResponse = await s3Client().send(objectList);
+
+      listResponse.Contents.forEach((object) => {
+        list.push(object.Key);
+      });
+
+      return list;
+    } catch (error) {
+      const err = `Error while listing objects ${error}`;
       throw err;
     }
   },

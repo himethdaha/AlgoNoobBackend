@@ -1,5 +1,6 @@
 const User = require("../database/models/userModel");
 const { deleteUser } = require("../utils/email/emailSender");
+const { deleteObject, listObjects } = require("../Cloud/s3Ops");
 
 async function userDelete(decodedJwt) {
   try {
@@ -18,6 +19,20 @@ async function userDelete(decodedJwt) {
 
     // Delete user
     const deletedUser = await User.findOneAndDelete({ id: user._id });
+
+    // Delete user from S3
+    const params = {
+      Bucket: process.env.BUCKET_NAME,
+      Key: `${process.env.KEY}${user[0].userName}`,
+    };
+
+    // Get a list of the keys to be deleted
+    const keys = await listObjects(params);
+
+    keys.forEach(async (key) => {
+      params.Key = key;
+      const response = await deleteObject(params);
+    });
 
     if (!deletedUser) {
       throw (err = {

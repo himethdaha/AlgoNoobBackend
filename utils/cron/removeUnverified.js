@@ -38,15 +38,18 @@ const removeUnverifiedUsers = async () => {
       error: error,
     };
 
-    fs.appendFile(
-      "./utils/cron/error.txt",
-      JSON.stringify(content) + "\n",
-      function (err) {
-        if (err) {
-          return;
+    if (content.users.length > 0) {
+      fs.appendFile(
+        "./utils/cron/error.txt",
+        JSON.stringify(content) + "\n",
+        function (err) {
+          if (err) {
+            return;
+          }
         }
-      }
-    );
+      );
+    }
+    return;
   }
 };
 
